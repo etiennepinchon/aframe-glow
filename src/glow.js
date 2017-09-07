@@ -41,7 +41,7 @@ AFRAME.registerComponent('glow', {
       object = modifier.modify( object );
 
       that.glowMesh = new THREE.Mesh( object, that.glowMaterial);
-    	scene.add( that.glowMesh );
+    	that.el.object3D.add( that.glowMesh );
 
       if (!that.data.enabled) {
        that.glowMesh.visible = false;
@@ -84,7 +84,6 @@ AFRAME.registerComponent('glow', {
   },
   tick: function () {
     if (this.glowMesh) {
-      this.glowMesh.position.set(this.el.object3D.position.x, this.el.object3D.position.y, this.el.object3D.position.z);
       this.glowMesh.rotation.set(this.el.object3D.rotation.x, this.el.object3D.rotation.y, this.el.object3D.rotation.z);
       this.glowMesh.scale.set(this.el.object3D.scale.x*this.data.scale, this.el.object3D.scale.y*this.data.scale, this.el.object3D.scale.z*this.data.scale);
       if (!this.camera) { return; }

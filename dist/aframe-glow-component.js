@@ -80,21 +80,29 @@
 	    		transparent: true
 	    	});
 
+	      // ISSUE for OBJs: >> line below
 	      var object = that.el.object3DMap.mesh.geometry.clone();
 	      object = new THREE.Geometry().fromBufferGeometry(object);
 	      var modifier = new THREE.BufferSubdivisionModifier( 2 );
 	      object = modifier.modify( object );
 
 	      that.glowMesh = new THREE.Mesh( object, that.glowMaterial);
-	    	scene.add( that.glowMesh );
+	    	that.el.object3D.add( that.glowMesh );
 
 	      if (!that.data.enabled) {
 	       that.glowMesh.visible = false;
 	      }
 	    }
 
-	    if (this.el.sceneEl.hasLoaded) { return run(); }
-	    this.el.sceneEl.addEventListener('loaded', run);
+	    // Make sure the entity has a mesh, otherwise wait for the 3D model to be loaded..
+	    function waitForEntityLoad() {
+	      if (that.el.object3DMap.mesh) { return run() }
+	      that.el.addEventListener('model-loaded', run);
+	    }
+
+	    // Make sure the scene has been loaded..
+	    if (this.el.sceneEl.hasLoaded) { return waitForEntityLoad(); }
+	    this.el.sceneEl.addEventListener('loaded', waitForEntityLoad);
 	  },
 	  update: function () {
 	    if (this.data.enabled) {
@@ -122,7 +130,6 @@
 	  },
 	  tick: function () {
 	    if (this.glowMesh) {
-	      this.glowMesh.position.set(this.el.object3D.position.x, this.el.object3D.position.y, this.el.object3D.position.z);
 	      this.glowMesh.rotation.set(this.el.object3D.rotation.x, this.el.object3D.rotation.y, this.el.object3D.rotation.z);
 	      this.glowMesh.scale.set(this.el.object3D.scale.x*this.data.scale, this.el.object3D.scale.y*this.data.scale, this.el.object3D.scale.z*this.data.scale);
 	      if (!this.camera) { return; }
