@@ -87,7 +87,7 @@ If you wish to serve the site from a different port:
     PORT=8000 npm start
 
 
-## Change logs
+## Change log
 
 * 1.0.1 - Fix glow position when placed inside another entity.
 
