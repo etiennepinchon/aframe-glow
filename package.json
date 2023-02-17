@@ -1,20 +1,21 @@
 {
   "name": "aframe-glow",
-  "main": "src/glow.js",
+  "main": "src/glow.mjs",
   "webpack": "dist/aframe-glow-component.min.js",
   "description": "Glow component for AFrame (https://aframe.io).",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "license": "MIT",
   "scripts": {
-    "start": "budo --live --verbose --port 3000 --open",
-    "dist": "webpack src/glow.js dist/aframe-glow-component.js && webpack -p src/glow.js dist/aframe-glow-component.min.js"
+    "start": "budo --live --verbose --port 3000 --open --ssl --cors",
+    "dist": "webpack -d src/glow.mjs -o dist/aframe-glow-component.js && webpack -p src/glow.mjs -o dist/aframe-glow-component.min.js"
   },
   "devDependencies": {
-    "browserify": "^12.0.1",
-    "budo": "^7.1.0",
-    "shelljs": "^0.6.0",
-    "webpack": "^1.12.9",
-    "ghpages": "0.0.3"
+    "browserify": "^17.0.0",
+    "budo": "^11.8.4",
+    "ghpages": "0.0.10",
+    "shelljs": "^0.8.5",
+    "webpack": "^4.46.0",
+    "webpack-cli": "^3.3.12"
   },
   "keywords": [
     "aframe",
