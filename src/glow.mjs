@@ -1,3 +1,5 @@
+import { LoopSubdivision } from './LoopSubdivision.mjs';
+
 AFRAME.registerComponent('glow', {
   schema: {
     enabled: {default: true},
@@ -8,47 +10,48 @@ AFRAME.registerComponent('glow', {
     side: {type: 'string', default: "front" },
   },
   init: function () {
-    var scene = this.el.sceneEl.object3D;
-    var that = this;
-    var run = function() {
-      var camera = document.querySelector('[camera]').object3D;
-      that.camera = camera;
+		const that = this;
+		const run = function () {
+			const camera = document.querySelector('[camera]').object3D;
+			that.camera = camera;
 
-      var sideRender = THREE.FrontSide;
-      if (that.data.side === "back") {
-        sideRender = THREE.BackSide;
-      }
+			let sideRender = THREE.FrontSide;
+			if (that.data.side === "back") {
+				sideRender = THREE.BackSide;
+			}
 
-      // Setup shader
-    	that.glowMaterial = new THREE.ShaderMaterial({
-    	    uniforms: {
-    			"c":   { type: "f", value: that.data.c },
-    			"p":   { type: "f", value: that.data.p },
-    			glowColor: { type: "c", value: new THREE.Color(that.data.color) },
-    			viewVector: { type: "v3", value: camera.position }
-    		},
-    		vertexShader:   THREE.__GlowShader.vertexShader,
-    		fragmentShader: THREE.__GlowShader.fragmentShader,
-    		side: sideRender,
-    		blending: THREE.AdditiveBlending,
-    		transparent: true
-    	});
+			// Setup shader
+			that.glowMaterial = new THREE.ShaderMaterial({
+				uniforms: {
+					"c": {type: "f", value: that.data.c},
+					"p": {type: "f", value: that.data.p},
+					glowColor: {type: "c", value: new THREE.Color(that.data.color)},
+					viewVector: {type: "v3", value: camera.position}
+				},
+				vertexShader: THREE.__GlowShader.vertexShader,
+				fragmentShader: THREE.__GlowShader.fragmentShader,
+				side: sideRender,
+				blending: THREE.AdditiveBlending,
+				transparent: true
+			});
 
-      // ISSUE for OBJs: >> line below
-      var object = that.el.object3DMap.mesh.geometry.clone();
-      object = new THREE.Geometry().fromBufferGeometry(object);
-      var modifier = new THREE.BufferSubdivisionModifier( 2 );
-      object = modifier.modify( object );
+			const geometry = LoopSubdivision.modify(that.el.object3DMap.mesh.geometry, 2, {});
 
-      that.glowMesh = new THREE.Mesh( object, that.glowMaterial);
-    	that.el.object3D.add( that.glowMesh );
+			// ISSUE for OBJs: >> line below
+			// let object = that.el.object3DMap.mesh.geometry.clone();
+			// object = new THREE.Geometry().fromBufferGeometry(object);
+			// const modifier = new THREE.BufferSubdivisionModifier(2);
+			// object = modifier.modify(object);
 
-      if (!that.data.enabled) {
-       that.glowMesh.visible = false;
-      }
-    }
+			that.glowMesh = new THREE.Mesh(geometry, that.glowMaterial);
+			that.el.object3D.add(that.glowMesh);
 
-    // Make sure the entity has a mesh, otherwise wait for the 3D model to be loaded..
+			if (!that.data.enabled) {
+				that.glowMesh.visible = false;
+			}
+		};
+
+		// Make sure the entity has a mesh, otherwise wait for the 3D model to be loaded..
     function waitForEntityLoad() {
       if (that.el.object3DMap.mesh) { return run() }
       that.el.addEventListener('model-loaded', run);
@@ -72,8 +75,8 @@ AFRAME.registerComponent('glow', {
         this.glowMesh.material.uniforms[ "p" ].value = this.data.p;
         this.glowMesh.material.uniforms.glowColor.value.setHex( this.data.color.replace("#", "0x"));
 
-        var sideRender = THREE.FrontSide;
-        if (this.data.side === "back") {
+				let sideRender = THREE.FrontSide;
+				if (this.data.side === "back") {
           sideRender = THREE.BackSide;
         }
         this.glowMesh.material.side = sideRender;
@@ -93,8 +96,8 @@ AFRAME.registerComponent('glow', {
   },
   remove: function () {
     if (!this.glowMesh) { return; }
-    var scene = this.el.sceneEl.object3D;
-    scene.remove( this.glowMesh );
+		const scene = this.el.sceneEl.object3D;
+		scene.remove( this.glowMesh );
     this.glowMesh = null;
     this.glowMaterial = null;
   },
@@ -169,14 +172,6 @@ THREE.__GlowShader = {
  * It should be moved into it's own file honestly, then included before the BufferSubdivisionModifier - maybe in three's core?
  *
  */
-
-THREE.Face3.prototype.set = function( a, b, c ) {
-
-	this.a = a;
-	this.b = b;
-	this.c = c;
-
-};
 
 var TypedArrayHelper = function( size, registers, register_type, array_type, unit_size, accessors ) {
 
@@ -305,46 +300,46 @@ TypedArrayHelper.prototype = {
 };
 
 
-function convertGeometryToIndexedBuffer( geometry ) {
-
-	var BGeom = new THREE.BufferGeometry();
-
-	// create a new typed array
-	var vertArray = new TypedArrayHelper( geometry.vertices.length, 0, THREE.Vector3, Float32Array, 3, [ 'x', 'y', 'z' ] );
-	var indexArray = new TypedArrayHelper( geometry.faces.length, 0, THREE.Face3, Uint32Array, 3, [ 'a', 'b', 'c' ] );
-	var uvArray = new TypedArrayHelper( geometry.faceVertexUvs[0].length * 3 * 3, 0, THREE.Vector2, Float32Array, 2, [ 'x', 'y' ] );
-
-	for ( var i = 0, il = geometry.vertices.length; i < il; i++ ) {
-
-		vertArray.push_element( geometry.vertices[ i ] );
-
-	}
-
-	for ( var i = 0, il = geometry.faces.length; i < il; i++ ) {
-
-		indexArray.push_element( geometry.faces[ i ] );
-
-	}
-
-	for ( var i = 0, il = geometry.faceVertexUvs[ 0 ].length; i < il; i++ ) {
-
-		uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 0 ] );
-		uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 1 ] );
-		uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 2 ] );
-
-	}
-
-	indexArray.trim_size();
-	vertArray.trim_size();
-	uvArray.trim_size();
-
-	BGeom.setIndex( new THREE.BufferAttribute( indexArray.buffer, 3 ) );
-	BGeom.addAttribute( 'position', new THREE.BufferAttribute( vertArray.buffer, 3 ) );
-	BGeom.addAttribute( 'uv', new THREE.BufferAttribute( uvArray.buffer, 2 ) );
-
-	return BGeom;
-
-}
+// function convertGeometryToIndexedBuffer( geometry ) {
+//
+// 	var BGeom = new THREE.BufferGeometry();
+//
+// 	// create a new typed array
+// 	var vertArray = new TypedArrayHelper( geometry.vertices.length, 0, THREE.Vector3, Float32Array, 3, [ 'x', 'y', 'z' ] );
+// 	var indexArray = new TypedArrayHelper( geometry.faces.length, 0, THREE.Face3, Uint32Array, 3, [ 'a', 'b', 'c' ] );
+// 	var uvArray = new TypedArrayHelper( geometry.faceVertexUvs[0].length * 3 * 3, 0, THREE.Vector2, Float32Array, 2, [ 'x', 'y' ] );
+//
+// 	for ( var i = 0, il = geometry.vertices.length; i < il; i++ ) {
+//
+// 		vertArray.push_element( geometry.vertices[ i ] );
+//
+// 	}
+//
+// 	for ( var i = 0, il = geometry.faces.length; i < il; i++ ) {
+//
+// 		indexArray.push_element( geometry.faces[ i ] );
+//
+// 	}
+//
+// 	for ( var i = 0, il = geometry.faceVertexUvs[ 0 ].length; i < il; i++ ) {
+//
+// 		uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 0 ] );
+// 		uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 1 ] );
+// 		uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 2 ] );
+//
+// 	}
+//
+// 	indexArray.trim_size();
+// 	vertArray.trim_size();
+// 	uvArray.trim_size();
+//
+// 	BGeom.setIndex( new THREE.BufferAttribute( indexArray.buffer, 3 ) );
+// 	BGeom.addAttribute( 'position', new THREE.BufferAttribute( vertArray.buffer, 3 ) );
+// 	BGeom.addAttribute( 'uv', new THREE.BufferAttribute( uvArray.buffer, 2 ) );
+//
+// 	return BGeom;
+//
+// }
 
 function compute_vertex_normals( geometry ) {
 

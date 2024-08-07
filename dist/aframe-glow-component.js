@@ -1,965 +1,113 @@
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-
+/******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
+/******/ 		if(installedModules[moduleId]) {
 /******/ 			return installedModules[moduleId].exports;
-
+/******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
-/******/ 			exports: {},
-/******/ 			id: moduleId,
-/******/ 			loaded: false
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
 /******/ 		};
-
+/******/
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
+/******/
 /******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-
+/******/ 		module.l = true;
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-
-
+/******/
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-
+/******/
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-
+/******/
+/******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(0);
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/glow.mjs");
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports) {
-
-	AFRAME.registerComponent('glow', {
-	  schema: {
-	    enabled: {default: true},
-	    c: {type: 'number', default: 1 },
-	    p: {type: 'number', default: 1.4 },
-	    color: {type: 'color', default: '#FFFF00'},
-	    scale: {type: 'number', default: 2 },
-	    side: {type: 'string', default: "front" },
-	  },
-	  init: function () {
-	    var scene = this.el.sceneEl.object3D;
-	    var that = this;
-	    var run = function() {
-	      var camera = document.querySelector('[camera]').object3D;
-	      that.camera = camera;
-
-	      var sideRender = THREE.FrontSide;
-	      if (that.data.side === "back") {
-	        sideRender = THREE.BackSide;
-	      }
-
-	      // Setup shader
-	    	that.glowMaterial = new THREE.ShaderMaterial({
-	    	    uniforms: {
-	    			"c":   { type: "f", value: that.data.c },
-	    			"p":   { type: "f", value: that.data.p },
-	    			glowColor: { type: "c", value: new THREE.Color(that.data.color) },
-	    			viewVector: { type: "v3", value: camera.position }
-	    		},
-	    		vertexShader:   THREE.__GlowShader.vertexShader,
-	    		fragmentShader: THREE.__GlowShader.fragmentShader,
-	    		side: sideRender,
-	    		blending: THREE.AdditiveBlending,
-	    		transparent: true
-	    	});
-
-	      // ISSUE for OBJs: >> line below
-	      var object = that.el.object3DMap.mesh.geometry.clone();
-	      object = new THREE.Geometry().fromBufferGeometry(object);
-	      var modifier = new THREE.BufferSubdivisionModifier( 2 );
-	      object = modifier.modify( object );
-
-	      that.glowMesh = new THREE.Mesh( object, that.glowMaterial);
-	    	that.el.object3D.add( that.glowMesh );
-
-	      if (!that.data.enabled) {
-	       that.glowMesh.visible = false;
-	      }
-	    }
-
-	    // Make sure the entity has a mesh, otherwise wait for the 3D model to be loaded..
-	    function waitForEntityLoad() {
-	      if (that.el.object3DMap.mesh) { return run() }
-	      that.el.addEventListener('model-loaded', run);
-	    }
-
-	    // Make sure the scene has been loaded..
-	    if (this.el.sceneEl.hasLoaded) { return waitForEntityLoad(); }
-	    this.el.sceneEl.addEventListener('loaded', waitForEntityLoad);
-	  },
-	  update: function () {
-	    if (this.data.enabled) {
-	      if (this.glowMesh) {
-	        this.glowMesh.visible = true;
-
-	        if (this.data.c < 0) { this.data.c = 0; }
-	        if (this.data.c > 1) { this.data.c = 1; }
-	        if (this.data.p < 0) { this.data.p = 0; }
-	        if (this.data.p > 6) { this.data.p = 6; }
-
-	        this.glowMesh.material.uniforms[ "c" ].value = this.data.c;
-	        this.glowMesh.material.uniforms[ "p" ].value = this.data.p;
-	        this.glowMesh.material.uniforms.glowColor.value.setHex( this.data.color.replace("#", "0x"));
-
-	        var sideRender = THREE.FrontSide;
-	        if (this.data.side === "back") {
-	          sideRender = THREE.BackSide;
-	        }
-	        this.glowMesh.material.side = sideRender;
-	      }
-	    } else if (this.glowMesh) {
-	      this.glowMesh.visible = false;
-	    }
-	  },
-	  tick: function () {
-	    if (this.glowMesh) {
-	      this.glowMesh.rotation.set(this.el.object3D.rotation.x, this.el.object3D.rotation.y, this.el.object3D.rotation.z);
-	      this.glowMesh.scale.set(this.el.object3D.scale.x*this.data.scale, this.el.object3D.scale.y*this.data.scale, this.el.object3D.scale.z*this.data.scale);
-	      if (!this.camera) { return; }
-	      this.glowMesh.material.uniforms.viewVector.value =
-	    		new THREE.Vector3().subVectors( this.camera.position, this.glowMesh.position );
-	    }
-	  },
-	  remove: function () {
-	    if (!this.glowMesh) { return; }
-	    var scene = this.el.sceneEl.object3D;
-	    scene.remove( this.glowMesh );
-	    this.glowMesh = null;
-	    this.glowMaterial = null;
-	  },
-	  pause: function () {},
-	  play: function () {}
-	});
-
-
-	THREE.__GlowShader = {
-
-		vertexShader: [
-
-	    "uniform vec3 viewVector;",
-	    "uniform float c;",
-	    "uniform float p;",
-	    "varying float intensity;",
-	    "void main() ",
-	    "{",
-	      "vec3 vNormal = normalize( normalMatrix * normal );",
-	    	"vec3 vNormel = normalize( normalMatrix * viewVector );",
-	    	"intensity = pow( c - dot(vNormal, vNormel), p );",
-
-	      "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-	    "}"
-
-		].join("\n"),
-
-		fragmentShader: [
-
-			"uniform vec3 glowColor;",
-	    "varying float intensity;",
-	    "void main() ",
-	    "{",
-	    	"vec3 glow = glowColor * intensity;",
-	      "gl_FragColor = vec4( glow, 1.0 );",
-	    "}"
-
-		].join("\n")
-
-	};
-
-
-
-
-	/*
-	 * @author zz85 / http://twitter.com/blurspline / http://www.lab4games.net/zz85/blog
-	 * @author Matthew Adams / http://www.centerionware.com - added UV support and rewrote to use buffergeometry.
-	 *
-	 * Subdivision Geometry Modifier using Loop Subdivision Scheme for Geometry / BufferGeometry
-	 *
-	 * References:
-	 *	http://graphics.stanford.edu/~mdfisher/subdivision.html
-	 *	http://www.holmes3d.net/graphics/subdivision/
-	 *	http://www.cs.rutgers.edu/~decarlo/readings/subdiv-sg00c.pdf
-	 *
-	 * Known Issues:
-	 *	- currently doesn't handle "Sharp Edges"
-	 *	- no checks to prevent breaking when uv's don't exist.
-	 *	- vertex colors are unsupported.
-	 *	**DDS Images when using corrected uv's passed to subdivision modifier will have their uv's flipy'd within the correct uv set
-	 *	**Either flipy the DDS image, or use shaders. Don't try correcting the uv's before passing into subdiv (eg: v=1-v).
-	 *
-	 * @input THREE.Geometry, or index'd THREE.BufferGeometry with faceUV's (Not vertex uv's)
-	 * @output non-indexed vertex points, uv's, normals.
-	 *
-	 * The TypedArrayHelper class is designed to assist managing typed arrays, and to allow the removal of all 'new Vector3, new Face3, new Vector2'.
-	 *
-	 * It will automatically resize them if trying to push a new element to an array that isn't long enough
-	 * It provides 'registers' that the units can be mapped to. This allows a small set of objects
-	 * (ex: vector3's, face3's, vector2's) to be allocated then used, to eliminate any need to rewrite all
-	 * the features those classes offer while not requiring some_huge_number to be allocated.
-	 * It should be moved into it's own file honestly, then included before the BufferSubdivisionModifier - maybe in three's core?
-	 *
-	 */
-
-	THREE.Face3.prototype.set = function( a, b, c ) {
-
-		this.a = a;
-		this.b = b;
-		this.c = c;
-
-	};
-
-	var TypedArrayHelper = function( size, registers, register_type, array_type, unit_size, accessors ) {
-
-		this.array_type = array_type;
-		this.register_type = register_type;
-		this.unit_size = unit_size;
-		this.accessors = accessors;
-		this.buffer = new array_type( size * unit_size );
-		this.register = [];
-		this.length = 0;
-		this.real_length = size;
-		this.available_registers = registers;
-
-		for ( var i = 0; i < registers; i++ ) {
-
-			this.register.push( new register_type() );
-
-		}
-
-	};
-
-	TypedArrayHelper.prototype = {
-
-		constructor: TypedArrayHelper,
-
-		index_to_register: function( index, register, isLoop ) {
-
-			var base = index * this.unit_size;
-
-			if ( register >= this.available_registers ) {
-
-				throw new Error( 'THREE.BufferSubdivisionModifier: Not enough registers in TypedArrayHelper.' );
-
-			}
-
-			if ( index > this.length ) {
-
-				throw new Error( 'THREE.BufferSubdivisionModifier: Index is out of range in TypedArrayHelper.' );
-
-			}
-
-			for ( var i = 0; i < this.unit_size; i++ ) {
-
-				( this.register[ register ] )[ this.accessors[ i ] ] = this.buffer[ base + i ];
-
-			}
-
-		},
-
-		resize: function( new_size ) {
-
-			if ( new_size === 0 ) {
-
-				new_size = 8;
-
-			}
-
-			if ( new_size < this.length ) {
-
-				this.buffer = this.buffer.subarray( 0, this.length * this.unit_size );
-
-			} else {
-
-				var nBuffer;
-
-				if ( this.buffer.length < new_size * this.unit_size ) {
-
-					nBuffer = new this.array_type( new_size * this.unit_size );
-					nBuffer.set( this.buffer );
-					this.buffer = nBuffer;
-					this.real_length = new_size;
-
-				} else {
-
-					nBuffer = new this.array_type( new_size * this.unit_size );
-					nBuffer.set( this.buffer.subarray( 0, this.length * this.unit_size ) );
-					this.buffer = nBuffer;
-					this.real_length = new_size;
-
-				}
-
-			}
-
-		},
-
-		from_existing: function( oldArray ) {
-
-			var new_size = oldArray.length;
-			this.buffer = new this.array_type( new_size );
-			this.buffer.set( oldArray );
-			this.length = oldArray.length / this.unit_size;
-			this.real_length = this.length;
-
-		},
-
-		push_element: function( vector ) {
-
-			if ( this.length + 1 > this.real_length ) {
-
-				this.resize( this.real_length * 2 );
-
-			}
-
-			var bpos = this.length * this.unit_size;
-
-			for ( var i = 0; i < this.unit_size; i++ ) {
-
-				this.buffer[ bpos + i ] = vector[ this.accessors[ i ] ];
-
-			}
-
-			this.length++;
-
-		},
-
-		trim_size: function() {
-
-			if ( this.length < this.real_length ) {
-
-				this.resize( this.length );
-
-			}
-
-		}
-
-	};
-
-
-	function convertGeometryToIndexedBuffer( geometry ) {
-
-		var BGeom = new THREE.BufferGeometry();
-
-		// create a new typed array
-		var vertArray = new TypedArrayHelper( geometry.vertices.length, 0, THREE.Vector3, Float32Array, 3, [ 'x', 'y', 'z' ] );
-		var indexArray = new TypedArrayHelper( geometry.faces.length, 0, THREE.Face3, Uint32Array, 3, [ 'a', 'b', 'c' ] );
-		var uvArray = new TypedArrayHelper( geometry.faceVertexUvs[0].length * 3 * 3, 0, THREE.Vector2, Float32Array, 2, [ 'x', 'y' ] );
-
-		for ( var i = 0, il = geometry.vertices.length; i < il; i++ ) {
-
-			vertArray.push_element( geometry.vertices[ i ] );
-
-		}
-
-		for ( var i = 0, il = geometry.faces.length; i < il; i++ ) {
-
-			indexArray.push_element( geometry.faces[ i ] );
-
-		}
-
-		for ( var i = 0, il = geometry.faceVertexUvs[ 0 ].length; i < il; i++ ) {
-
-			uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 0 ] );
-			uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 1 ] );
-			uvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 2 ] );
-
-		}
-
-		indexArray.trim_size();
-		vertArray.trim_size();
-		uvArray.trim_size();
-
-		BGeom.setIndex( new THREE.BufferAttribute( indexArray.buffer, 3 ) );
-		BGeom.addAttribute( 'position', new THREE.BufferAttribute( vertArray.buffer, 3 ) );
-		BGeom.addAttribute( 'uv', new THREE.BufferAttribute( uvArray.buffer, 2 ) );
-
-		return BGeom;
-
-	}
-
-	function compute_vertex_normals( geometry ) {
-
-		var ABC = [ 'a', 'b', 'c' ];
-		var XYZ = [ 'x', 'y', 'z' ];
-		var XY = [ 'x', 'y' ];
-
-		var oldVertices = new TypedArrayHelper( 0, 5, THREE.Vector3, Float32Array, 3, XYZ );
-		var oldFaces = new TypedArrayHelper( 0, 3, THREE.Face3, Uint32Array, 3, ABC );
-		oldVertices.from_existing( geometry.getAttribute( 'position' ).array );
-		var newNormals = new TypedArrayHelper( oldVertices.length * 3, 4, THREE.Vector3, Float32Array, 3, XYZ );
-		var newNormalFaces = new TypedArrayHelper( oldVertices.length, 1, function () { this.x = 0; }, Float32Array, 1, [ 'x' ] );
-
-		newNormals.length = oldVertices.length;
-		oldFaces.from_existing( geometry.index.array );
-		var a, b, c;
-		var my_weight;
-		var full_weights = [ 0.0, 0.0, 0.0 ];
-
-		for ( var i = 0, il = oldFaces.length; i < il; i++ ) {
-
-			oldFaces.index_to_register( i, 0 );
-
-			oldVertices.index_to_register( oldFaces.register[ 0 ].a, 0 );
-			oldVertices.index_to_register( oldFaces.register[ 0 ].b, 1 );
-			oldVertices.index_to_register( oldFaces.register[ 0 ].c, 2 );
-
-			newNormals.register[ 0 ].subVectors( oldVertices.register[ 1 ], oldVertices.register[ 0 ] );
-			newNormals.register[ 1 ].subVectors( oldVertices.register[ 2 ], oldVertices.register[ 1 ] );
-			newNormals.register[ 0 ].cross( newNormals.register[ 1 ] );
-			my_weight = Math.abs( newNormals.register[ 0 ].length() );
-
-			newNormalFaces.buffer[ oldFaces.register[ 0 ].a ] += my_weight;
-			newNormalFaces.buffer[ oldFaces.register[ 0 ].b ] += my_weight;
-			newNormalFaces.buffer[ oldFaces.register[ 0 ].c ] += my_weight;
-
-		}
-
-		var t_len;
-
-		for ( var i = 0, il = oldFaces.length; i < il; i++ ) {
-
-			oldFaces.index_to_register( i, 0 );
-			oldVertices.index_to_register( oldFaces.register[ 0 ].a, 0 );
-			oldVertices.index_to_register( oldFaces.register[ 0 ].b, 1 );
-			oldVertices.index_to_register( oldFaces.register[ 0 ].c, 2 );
-
-			newNormals.register[ 0 ].subVectors( oldVertices.register[ 1 ], oldVertices.register[ 0 ] );
-			newNormals.register[ 1 ].subVectors( oldVertices.register[ 2 ], oldVertices.register[ 0 ] );
-
-			newNormals.register[ 3 ].set( 0, 0, 0 );
-			newNormals.register[ 3 ].x = ( newNormals.register[ 0 ].y * newNormals.register[ 1 ].z ) - ( newNormals.register[ 0 ].z * newNormals.register[ 1 ].y );
-			newNormals.register[ 3 ].y = ( newNormals.register[ 0 ].z * newNormals.register[ 1 ].x ) - ( newNormals.register[ 0 ].x * newNormals.register[ 1 ].z );
-			newNormals.register[ 3 ].z = ( newNormals.register[ 0 ].x * newNormals.register[ 1 ].y ) - ( newNormals.register[ 0 ].y * newNormals.register[ 1 ].x );
-
-			newNormals.register[ 0 ].cross( newNormals.register[ 1 ] );
-
-			my_weight = Math.abs( newNormals.register[ 0 ].length() );
-
-			full_weights[ 0 ] = ( my_weight / newNormalFaces.buffer[ oldFaces.register[ 0 ].a ] );
-			full_weights[ 1 ] = ( my_weight / newNormalFaces.buffer[ oldFaces.register[ 0 ].b ] );
-			full_weights[ 2 ] = ( my_weight / newNormalFaces.buffer[ oldFaces.register[ 0 ].c ] );
-
-			newNormals.buffer[ ( oldFaces.register[ 0 ].a * 3 ) + 0 ] += newNormals.register[ 3 ].x * full_weights[ 0 ];
-			newNormals.buffer[ ( oldFaces.register[ 0 ].a * 3 ) + 1 ] += newNormals.register[ 3 ].y * full_weights[ 0 ];
-			newNormals.buffer[ ( oldFaces.register[ 0 ].a * 3 ) + 2 ] += newNormals.register[ 3 ].z * full_weights[ 0 ];
-
-			newNormals.buffer[ ( oldFaces.register[ 0 ].b * 3 ) + 0 ] += newNormals.register[ 3 ].x * full_weights[ 1 ];
-			newNormals.buffer[ ( oldFaces.register[ 0 ].b * 3 ) + 1 ] += newNormals.register[ 3 ].y * full_weights[ 1 ];
-			newNormals.buffer[ ( oldFaces.register[ 0 ].b * 3 ) + 2 ] += newNormals.register[ 3 ].z * full_weights[ 1 ];
-
-			newNormals.buffer[ ( oldFaces.register[ 0 ].c * 3 ) + 0 ] += newNormals.register[ 3 ].x * full_weights[ 2 ];
-			newNormals.buffer[ ( oldFaces.register[ 0 ].c * 3 ) + 1 ] += newNormals.register[ 3 ].y * full_weights[ 2 ];
-			newNormals.buffer[ ( oldFaces.register[ 0 ].c * 3 ) + 2 ] += newNormals.register[ 3 ].z * full_weights[ 2 ];
-
-		}
-
-		newNormals.trim_size();
-		geometry.addAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );
-
-	}
-
-	function unIndexIndexedGeometry( geometry ) {
-
-		var ABC = [ 'a', 'b', 'c' ];
-		var XYZ = [ 'x', 'y', 'z' ];
-		var XY = [ 'x', 'y' ];
-
-		var oldVertices = new TypedArrayHelper( 0, 3, THREE.Vector3, Float32Array, 3, XYZ );
-		var oldFaces = new TypedArrayHelper( 0, 3, THREE.Face3, Uint32Array, 3, ABC );
-		var oldUvs = new TypedArrayHelper( 0, 3, THREE.Vector2, Float32Array, 2, XY );
-		var oldNormals = new TypedArrayHelper( 0, 3, THREE.Vector3, Float32Array, 3, XYZ );
-
-		oldVertices.from_existing( geometry.getAttribute( 'position' ).array );
-		oldFaces.from_existing( geometry.index.array );
-		oldUvs.from_existing( geometry.getAttribute( 'uv' ).array );
-
-		compute_vertex_normals( geometry );
-		oldNormals.from_existing( geometry.getAttribute( 'normal' ).array );
-
-		var newVertices = new TypedArrayHelper( oldFaces.length * 3, 3, THREE.Vector3, Float32Array, 3, XYZ );
-		var newNormals = new TypedArrayHelper( oldFaces.length * 3, 3, THREE.Vector3, Float32Array, 3, XYZ );
-		var newUvs = new TypedArrayHelper( oldFaces.length * 3, 3, THREE.Vector2, Float32Array, 2, XY );
-		var v, w;
-
-		for ( var i = 0, il = oldFaces.length; i < il; i++ ) {
-
-			oldFaces.index_to_register( i, 0 );
-
-			oldVertices.index_to_register( oldFaces.register[ 0 ].a, 0 );
-			oldVertices.index_to_register( oldFaces.register[ 0 ].b, 1 );
-			oldVertices.index_to_register( oldFaces.register[ 0 ].c, 2 );
-
-			newVertices.push_element( oldVertices.register[ 0 ] );
-			newVertices.push_element( oldVertices.register[ 1 ] );
-			newVertices.push_element( oldVertices.register[ 2 ] );
-
-				if ( oldUvs.length !== 0 ) {
-
-					oldUvs.index_to_register( ( i * 3 ) + 0, 0 );
-					oldUvs.index_to_register( ( i * 3 ) + 1, 1 );
-					oldUvs.index_to_register( ( i * 3 ) + 2, 2 );
-
-					newUvs.push_element( oldUvs.register[ 0 ] );
-					newUvs.push_element( oldUvs.register[ 1 ] );
-					newUvs.push_element( oldUvs.register[ 2 ] );
-
-				}
-
-			oldNormals.index_to_register( oldFaces.register[ 0 ].a, 0 );
-			oldNormals.index_to_register( oldFaces.register[ 0 ].b, 1 );
-			oldNormals.index_to_register( oldFaces.register[ 0 ].c, 2 );
-
-			newNormals.push_element( oldNormals.register[ 0 ] );
-			newNormals.push_element( oldNormals.register[ 1 ] );
-			newNormals.push_element( oldNormals.register[ 2 ] );
-
-		}
-
-		newVertices.trim_size();
-		newUvs.trim_size();
-		newNormals.trim_size();
-
-		geometry.index = null;
-
-		geometry.addAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );
-		geometry.addAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );
-
-		if ( newUvs.length !== 0 ) {
-
-			geometry.addAttribute( 'uv', new THREE.BufferAttribute( newUvs.buffer, 2 ) );
-
-		}
-
-		return geometry;
-
-	}
-
-	THREE.BufferSubdivisionModifier = function( subdivisions ) {
-
-		this.subdivisions = ( subdivisions === undefined ) ? 1 : subdivisions;
-
-	};
-
-	THREE.BufferSubdivisionModifier.prototype.modify = function( geometry ) {
-
-		if ( geometry instanceof THREE.Geometry ) {
-
-			geometry.mergeVertices();
-
-			if ( typeof geometry.normals === 'undefined' ) {
-
-				geometry.normals = [];
-
-			}
-
-			geometry = convertGeometryToIndexedBuffer( geometry );
-
-		} else if ( !( geometry instanceof THREE.BufferGeometry ) ) {
-
-			console.error( 'THREE.BufferSubdivisionModifier: Geometry is not an instance of THREE.BufferGeometry or THREE.Geometry' );
-
-		}
-
-		var repeats = this.subdivisions;
-
-		while ( repeats -- > 0 ) {
-
-			this.smooth( geometry );
-
-		}
-
-		return unIndexIndexedGeometry( geometry );
-
-	};
-
-	var edge_type = function ( a, b ) {
-
-		this.a = a;
-		this.b = b;
-		this.faces = [];
-		this.newEdge = null;
-
-	};
-
-	( function () {
-
-		// Some constants
-		var ABC = [ 'a', 'b', 'c' ];
-		var XYZ = [ 'x', 'y', 'z' ];
-		var XY = [ 'x', 'y' ];
-
-		function getEdge( a, b, map ) {
-
-			var key = Math.min( a, b ) + '_' + Math.max( a, b );
-			return map[ key ];
-
-		}
-
-
-		function processEdge( a, b, vertices, map, face, metaVertices ) {
-
-			var vertexIndexA = Math.min( a, b );
-			var vertexIndexB = Math.max( a, b );
-
-			var key = vertexIndexA + '_' + vertexIndexB;
-
-			var edge;
-
-			if ( key in map ) {
-
-				edge = map[ key ];
-
-			} else {
-
-				edge = new edge_type( vertexIndexA,vertexIndexB );
-				map[key] = edge;
-
-			}
-
-			edge.faces.push( face );
-
-			metaVertices[ a ].edges.push( edge );
-			metaVertices[ b ].edges.push( edge );
-
-		}
-
-		function generateLookups( vertices, faces, metaVertices, edges ) {
-
-			var i, il, face, edge;
-
-			for ( i = 0, il = vertices.length; i < il; i++ ) {
-
-				metaVertices[ i ] = { edges: [] };
-
-			}
-
-			for ( i = 0, il = faces.length; i < il; i++ ) {
-
-				faces.index_to_register( i, 0 );
-				face = faces.register[ 0 ]; // Faces is now a TypedArrayHelper class, not a face3.
-
-				processEdge( face.a, face.b, vertices, edges, i, metaVertices );
-				processEdge( face.b, face.c, vertices, edges, i, metaVertices );
-				processEdge( face.c, face.a, vertices, edges, i, metaVertices );
-
-			}
-
-		}
-
-		function newFace( newFaces, face ) {
-
-			newFaces.push_element( face );
-
-		}
-
-		function midpoint( a, b ) {
-
-			return ( Math.abs( b - a ) / 2 ) + Math.min( a, b );
-
-		}
-
-		function newUv( newUvs, a, b, c ) {
-
-			newUvs.push_element( a );
-			newUvs.push_element( b );
-			newUvs.push_element( c );
-
-		}
-
-		/////////////////////////////
-
-		// Performs one iteration of Subdivision
-
-		THREE.BufferSubdivisionModifier.prototype.smooth = function ( geometry ) {
-
-			var oldVertices, oldFaces, oldUvs;
-			var newVertices, newFaces, newUVs;
-
-			var n, l, i, il, j, k;
-			var metaVertices, sourceEdges;
-
-			oldVertices = new TypedArrayHelper( 0, 3, THREE.Vector3, Float32Array, 3, XYZ );
-			oldFaces = new TypedArrayHelper( 0, 3, THREE.Face3, Uint32Array, 3, ABC );
-			oldUvs = new TypedArrayHelper( 0, 3, THREE.Vector2, Float32Array, 2, XY );
-			oldVertices.from_existing( geometry.getAttribute( 'position' ).array );
-			oldFaces.from_existing( geometry.index.array );
-			oldUvs.from_existing( geometry.getAttribute( 'uv' ).array );
-
-			var doUvs = false;
-
-			if ( typeof oldUvs !== 'undefined' && oldUvs.length !== 0 ) {
-
-				doUvs = true;
-
-			}
-			/******************************************************
-			*
-			* Step 0: Preprocess Geometry to Generate edges Lookup
-			*
-			*******************************************************/
-
-			metaVertices = new Array( oldVertices.length );
-			sourceEdges = {}; // Edge => { oldVertex1, oldVertex2, faces[]  }
-
-			generateLookups( oldVertices, oldFaces, metaVertices, sourceEdges );
-
-
-			/******************************************************
-			*
-			*	Step 1.
-			*	For each edge, create a new Edge Vertex,
-			*	then position it.
-			*
-			*******************************************************/
-
-			newVertices = new TypedArrayHelper( ( geometry.getAttribute( 'position' ).array.length * 2 ) / 3, 2, THREE.Vector3, Float32Array, 3, XYZ );
-			var other, currentEdge, newEdge, face;
-			var edgeVertexWeight, adjacentVertexWeight, connectedFaces;
-
-			var tmp = newVertices.register[ 1 ];
-			for ( i in sourceEdges ) {
-
-			currentEdge = sourceEdges[ i ];
-			newEdge = newVertices.register[ 0 ];
-
-			edgeVertexWeight = 3 / 8;
-			adjacentVertexWeight = 1 / 8;
-
-			connectedFaces = currentEdge.faces.length;
-
-			// check how many linked faces. 2 should be correct.
-			if ( connectedFaces !== 2 ) {
-
-				// if length is not 2, handle condition
-				edgeVertexWeight = 0.5;
-				adjacentVertexWeight = 0;
-
-			}
-
-			oldVertices.index_to_register( currentEdge.a, 0 );
-			oldVertices.index_to_register( currentEdge.b, 1 );
-			newEdge.addVectors( oldVertices.register[ 0 ], oldVertices.register[ 1 ] ).multiplyScalar( edgeVertexWeight );
-
-			tmp.set( 0, 0, 0 );
-
-			for ( j = 0; j < connectedFaces; j++ ) {
-
-				oldFaces.index_to_register( currentEdge.faces[ j ], 0 );
-				face = oldFaces.register[ 0 ];
-
-				for ( k = 0; k < 3; k++ ) {
-
-					oldVertices.index_to_register( face[ ABC[ k ] ], 2 );
-					other = oldVertices.register[ 2 ];
-
-					if ( face[ ABC[ k ] ] !== currentEdge.a && face[ ABC[ k ] ] !== currentEdge.b) {
-
-						break;
-
-					}
-
-			}
-
-			tmp.add( other );
-
-			}
-
-			tmp.multiplyScalar( adjacentVertexWeight );
-			newEdge.add( tmp );
-
-			currentEdge.newEdge = newVertices.length;
-			newVertices.push_element( newEdge );
-
-			}
-
-			var edgeLength = newVertices.length;
-			/******************************************************
-			*
-			*	Step 2.
-			*	Reposition each source vertices.
-			*
-			*******************************************************/
-
-			var beta, sourceVertexWeight, connectingVertexWeight;
-			var connectingEdge, connectingEdges, oldVertex, newSourceVertex;
-
-			for ( i = 0, il = oldVertices.length; i < il; i++ ) {
-
-				oldVertices.index_to_register( i, 0, XYZ );
-				oldVertex = oldVertices.register[ 0 ];
-
-				// find all connecting edges (using lookupTable)
-				connectingEdges = metaVertices[ i ].edges;
-				n = connectingEdges.length;
-
-				if ( n === 3 ) {
-
-					beta = 3 / 16;
-
-				} else if (n > 3) {
-
-					beta = 3 / (8 * n); // Warren's modified formula
-
-				}
-
-				// Loop's original beta formula
-				// beta = 1 / n * ( 5/8 - Math.pow( 3/8 + 1/4 * Math.cos( 2 * Math. PI / n ), 2) );
-
-				sourceVertexWeight = 1 - n * beta;
-				connectingVertexWeight = beta;
-
-				if ( n <= 2 ) {
-
-					// crease and boundary rules
-
-					if ( n === 2 ) {
-
-						sourceVertexWeight = 3 / 4;
-						connectingVertexWeight = 1 / 8;
-
-					}
-
-				}
-
-				newSourceVertex = oldVertex.multiplyScalar( sourceVertexWeight );
-
-				tmp.set( 0, 0, 0 );
-
-				for ( j = 0; j < n; j++ ) {
-
-					connectingEdge = connectingEdges[ j ];
-					other = connectingEdge.a !== i ? connectingEdge.a : connectingEdge.b;
-					oldVertices.index_to_register( other, 1, XYZ );
-					tmp.add( oldVertices.register[ 1 ] );
-
-				}
-
-				tmp.multiplyScalar( connectingVertexWeight );
-				newSourceVertex.add( tmp );
-
-				newVertices.push_element( newSourceVertex,XYZ );
-
-			}
-
-
-			/******************************************************
-			*
-			*	Step 3.
-			*	Generate faces between source vertices and edge vertices.
-			*
-			*******************************************************/
-
-
-			var edge1, edge2, edge3;
-			newFaces = new TypedArrayHelper( ( geometry.index.array.length * 4 ) / 3, 1, THREE.Face3, Float32Array, 3, ABC );
-			newUVs = new TypedArrayHelper( ( geometry.getAttribute( 'uv' ).array.length * 4 ) / 2, 3, THREE.Vector2, Float32Array, 2, XY );
-			var x3 = newUVs.register[ 0 ];
-			var x4 = newUVs.register[ 1 ];
-			var x5 = newUVs.register[ 2 ];
-			var tFace = newFaces.register[ 0 ];
-
-			for ( i = 0, il = oldFaces.length; i < il; i++ ) {
-
-				oldFaces.index_to_register( i, 0 );
-				face = oldFaces.register[ 0 ];
-
-				// find the 3 new edges vertex of each old face
-				// The new source verts are added after the new edge verts now..
-
-				edge1 = getEdge( face.a, face.b, sourceEdges ).newEdge;
-				edge2 = getEdge( face.b, face.c, sourceEdges ).newEdge;
-				edge3 = getEdge( face.c, face.a, sourceEdges ).newEdge;
-
-				// create 4 faces.
-				tFace.set( edge1, edge2, edge3 );
-				newFace( newFaces, tFace );
-				tFace.set( face.a + edgeLength, edge1, edge3 );
-				newFace( newFaces, tFace );
-				tFace.set( face.b + edgeLength, edge2, edge1 );
-				newFace( newFaces, tFace );
-				tFace.set( face.c + edgeLength, edge3, edge2 );
-				newFace( newFaces, tFace );
-
-
-				/*
-					0________C_______2
-					 \      /\      /
-					  \ F2 /  \ F4 /
-					   \  / F1 \  /
-					    \/______\/
-					   A \      / B
-					      \ F3 /
-					       \  /
-					        \/
-					         1
-
-					Draw orders:
-					F1: ABC x3,x4,x5
-					F2: 0AC x0,x3,x5
-					F3: 1BA x1,x4,x3
-					F4: 2CB x2,x5,x4
-
-					0: x0
-					1: x1
-					2: x2
-					A: x3
-					B: x4
-					C: x5
-				*/
-
-				if ( doUvs === true ) {
-
-					oldUvs.index_to_register( ( i * 3 ) + 0, 0 );
-					oldUvs.index_to_register( ( i * 3 ) + 1, 1 );
-					oldUvs.index_to_register( ( i * 3 ) + 2, 2 );
-
-					var x0 = oldUvs.register[ 0 ]; // uv[0];
-					var x1 = oldUvs.register[ 1 ]; // uv[1];
-					var x2 = oldUvs.register[ 2 ]; // uv[2];
-
-					x3.set( midpoint( x0.x, x1.x ), midpoint( x0.y, x1.y ) );
-					x4.set( midpoint( x1.x, x2.x ), midpoint( x1.y, x2.y ) );
-					x5.set( midpoint( x0.x, x2.x ), midpoint( x0.y, x2.y ) );
-
-					newUv( newUVs, x3, x4, x5 );
-					newUv( newUVs, x0, x3, x5 );
-
-					newUv( newUVs, x1, x4, x3 );
-					newUv( newUVs, x2, x5, x4 );
-
-				}
-
-			}
-
-			// Overwrite old arrays
-
-			newFaces.trim_size();
-			newVertices.trim_size();
-			newUVs.trim_size();
-
-			geometry.setIndex( new THREE.BufferAttribute( newFaces.buffer ,3 ) );
-			geometry.addAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );
-			geometry.addAttribute( 'uv', new THREE.BufferAttribute( newUVs.buffer, 2 ) );
-
-		};
-
-	} ) ();
-
+/******/ ({
+
+/***/ "./src/LoopSubdivision.mjs":
+/*!*********************************!*\
+  !*** ./src/LoopSubdivision.mjs ***!
+  \*********************************/
+/*! exports provided: LoopSubdivision */
+/***/ (function(__webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"LoopSubdivision\", function() { return LoopSubdivision; });\n/**\n * @description Loop Subdivision Surface\n * @about       Smooth subdivision surface modifier for use with three.js BufferGeometry.\n * @author      Stephens Nunnally <@stevinz>\n * @license     MIT - Copyright (c) 2022 Stephens Nunnally\n * @source      https://github.com/stevinz/three-subdivide\n */\n/////////////////////////////////////////////////////////////////////////////////////\n//\n//  Functions\n//      modify              Applies Loop subdivision to BufferGeometry, returns new BufferGeometry\n//      edgeSplit           Splits all triangles at edges shared by coplanar triangles\n//      flat                One iteration of Loop subdivision, without point averaging\n//      smooth              One iteration of Loop subdivision, with point averaging\n//\n//  Info\n//      This modifier uses the Loop (Charles Loop, 1987) subdivision surface algorithm to smooth\n//      modern three.js BufferGeometry.\n//\n//      At one point, three.js included a subdivision surface modifier in the extended examples (see bottom\n//      of file for links), it was removed in r125. The modifier was originally based on the Catmull-Clark\n//      algorithm, which works best for geometry with convex coplanar n-gon faces. In three.js r60 the modifier\n//      was changed to utilize the Loop algorithm. The Loop algorithm was designed to work better with triangle\n//      based meshes.\n//\n//      The Loop algorithm, however, doesn't always provide uniform results as the vertices are\n//      skewed toward the most used vertex positions. A triangle based box (e.g. BoxGeometry for example) will\n//      tend to favor the corners. To alleviate this issue, this implementation includes an initial pass to split\n//      coplanar faces at their shared edges. It starts by splitting along the longest shared edge first, and then\n//      from that midpoint it splits to any remaining coplanar shared edges.\n//\n//      Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop\n//      algorithm. In some cases (often in flat geometries) this will produce undesired results, a\n//      noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.\n//\n//  Note(s)\n//      - This modifier returns a new BufferGeometry instance, it does not dispose() of the old geometry.\n//\n//      - This modifier returns a NonIndexed geometry. An Indexed geometry can be created by using the\n//        BufferGeometryUtils.mergeVertices() function, see:\n//        https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices\n//\n//      - This modifier works best with geometry whose triangles share edges AND edge vertices. See diagram below.\n//\n//          OKAY          NOT OKAY\n//            O              O\n//           /|\\            / \\\n//          / | \\          /   \\\n//         /  |  \\        /     \\\n//        O---O---O      O---O---O\n//         \\  |  /        \\  |  /\n//          \\ | /          \\ | /\n//           \\|/            \\|/\n//            O              O\n//\n//  Reference(s)\n//      - Subdivision Surfaces\n//          https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/thesis-10.pdf\n//          https://en.wikipedia.org/wiki/Loop_subdivision_surface\n//          https://cseweb.ucsd.edu/~alchern/teaching/cse167_fa21/6-3Surfaces.pdf\n//\n//      - Original three.js SubdivisionModifier, r124 (Loop)\n//          https://github.com/mrdoob/three.js/blob/r124/examples/jsm/modifiers/SubdivisionModifier.js\n//\n//      - Original three.js SubdivisionModifier, r59 (Catmull-Clark)\n//          https://github.com/mrdoob/three.js/blob/r59/examples/js/modifiers/SubdivisionModifier.js\n//\n/////////////////////////////////////////////////////////////////////////////////////\n\n// import * as THREE from 'three';\n\n///// Constants\n\nconst POSITION_DECIMALS = 2;\n\n///// Local Variables\n\nconst _average = new THREE.Vector3();\nconst _center = new THREE.Vector3();\nconst _midpoint = new THREE.Vector3();\nconst _normal = new THREE.Vector3();\nconst _temp = new THREE.Vector3();\n\nconst _vector0 = new THREE.Vector3(); // .Vector4();\nconst _vector1 = new THREE.Vector3(); // .Vector4();\nconst _vector2 = new THREE.Vector3(); // .Vector4();\nconst _vec0to1 = new THREE.Vector3();\nconst _vec1to2 = new THREE.Vector3();\nconst _vec2to0 = new THREE.Vector3();\n\nconst _position = [\n  new THREE.Vector3(),\n  new THREE.Vector3(),\n  new THREE.Vector3(),\n];\n\nconst _vertex = [\n  new THREE.Vector3(),\n  new THREE.Vector3(),\n  new THREE.Vector3(),\n];\n\nconst _triangle = new THREE.Triangle();\n\n/////////////////////////////////////////////////////////////////////////////////////\n/////   Loop Subdivision Surface\n/////////////////////////////////////////////////////////////////////////////////////\n\n/** Loop subdivision surface modifier for use with modern three.js BufferGeometry */\nclass LoopSubdivision {\n\n  /////////////////////////////////////////////////////////////////////////////////////\n  /////   Modify\n  ////////////////////\n\n  /**\n   * Applies Loop subdivision modifier to geometry\n   *\n   * @param {Object} bufferGeometry - Three.js geometry to be subdivided\n   * @param {Number} iterations - How many times to run subdividion\n   * @param {Object} params - Optional parameters object, see below\n   * @returns {Object} Returns new, subdivided, three.js BufferGeometry object\n   *\n   * Optional Parameters Object\n   * @param {Boolean} split - Should coplanar faces be divided along shared edges before running Loop subdivision?\n   * @param {Boolean} uvSmooth - Should UV values be averaged during subdivision?\n   * @param {Boolean} preserveEdges - Should edges / breaks in geometry be ignored during subdivision?\n   * @param {Boolean} flatOnly - If true, subdivision generates triangles, but does not modify positions\n   * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not continue\n   */\n  static modify(bufferGeometry, iterations = 1, params = {}) {\n    if (arguments.length > 3) console.warn(`LoopSubdivision.modify() now uses a parameter object. See readme for more info!`);\n\n    if (typeof params !== 'object') params = {};\n\n    ///// Parameters\n    if (params.split === undefined) params.split = true;\n    if (params.uvSmooth === undefined) params.uvSmooth = false;\n    if (params.preserveEdges === undefined) params.preserveEdges = false;\n    if (params.flatOnly === undefined) params.flatOnly = false;\n    if (params.maxTriangles === undefined) params.maxTriangles = Infinity;\n\n    ///// Geometries\n    if (! verifyGeometry(bufferGeometry)) return bufferGeometry;\n    let modifiedGeometry = bufferGeometry.clone();\n\n    ///// Presplit\n    if (params.split) {\n      const splitGeometry = LoopSubdivision.edgeSplit(modifiedGeometry)\n      modifiedGeometry.dispose();\n      modifiedGeometry = splitGeometry;\n    }\n\n    ///// Apply Subdivision\n    for (let i = 0; i < iterations; i++) {\n      let currentTriangles = modifiedGeometry.attributes.position.count / 3;\n      if (currentTriangles < params.maxTriangles) {\n        let subdividedGeometry;\n\n        // Subdivide\n        if (params.flatOnly) {\n          subdividedGeometry = LoopSubdivision.flat(modifiedGeometry);\n        } else {\n          subdividedGeometry = LoopSubdivision.smooth(modifiedGeometry, params);\n        }\n\n        // Copy and Resize Groups\n        modifiedGeometry.groups.forEach((group) => {\n          subdividedGeometry.addGroup(group.start * 4, group.count * 4, group.materialIndex);\n        });\n\n        // Clean Up\n        modifiedGeometry.dispose();\n        modifiedGeometry = subdividedGeometry;\n      }\n    }\n\n    ///// Return New Geometry\n    return modifiedGeometry;\n  }\n\n  /////////////////////////////////////////////////////////////////////////////////////\n  /////   Split Hypotenuse\n  ////////////////////\n\n  /**\n   * Applies one iteration of split subdivision. Splits all triangles at edges shared by coplanar triangles.\n   * Starts by splitting at longest shared edge, followed by splitting from that new center edge point to the\n   * center of any other shared edges.\n   */\n  static edgeSplit(geometry) {\n\n    ///// Geometries\n    if (! verifyGeometry(geometry)) return geometry;\n    const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();\n    const split = new THREE.BufferGeometry();\n\n    ///// Attributes\n    const attributeList = gatherAttributes(existing);\n    const vertexCount = existing.attributes.position.count;\n    const posAttribute = existing.getAttribute('position');\n    const norAttribute = existing.getAttribute('normal');\n    const edgeHashToTriangle = {};\n    const triangleEdgeHashes = [];\n    const edgeLength = {};\n    const triangleExist = [];\n\n    ///// Edges\n    for (let i = 0; i < vertexCount; i += 3) {\n\n      // Positions\n      _vector0.fromBufferAttribute(posAttribute, i + 0);\n      _vector1.fromBufferAttribute(posAttribute, i + 1);\n      _vector2.fromBufferAttribute(posAttribute, i + 2);\n      _normal.fromBufferAttribute(norAttribute, i);\n      const vecHash0 = hashFromVector(_vector0);\n      const vecHash1 = hashFromVector(_vector1);\n      const vecHash2 = hashFromVector(_vector2);\n\n      // Verify Area\n      const triangleSize = _triangle.set(_vector0, _vector1, _vector2).getArea();\n      triangleExist.push(! fuzzy(triangleSize, 0));\n      if (! triangleExist[i / 3]) {\n        triangleEdgeHashes.push([]);\n        continue;\n      }\n\n      // Calculate Normals\n      calcNormal(_normal, _vector0, _vector1, _vector2);\n      const normalHash = hashFromVector(_normal);\n\n      // Vertex Hashes\n      const hashes = [\n        `${vecHash0}_${vecHash1}_${normalHash}`, // [0]: 0to1\n        `${vecHash1}_${vecHash0}_${normalHash}`, // [1]: 1to0\n        `${vecHash1}_${vecHash2}_${normalHash}`, // [2]: 1to2\n        `${vecHash2}_${vecHash1}_${normalHash}`, // [3]: 2to1\n        `${vecHash2}_${vecHash0}_${normalHash}`, // [4]: 2to0\n        `${vecHash0}_${vecHash2}_${normalHash}`, // [5]: 0to2\n      ];\n\n      // Store Edge Hashes\n      const index = i / 3;\n      for (let j = 0; j < hashes.length; j++) {\n        // Attach Triangle Index to Edge Hash\n        if (! edgeHashToTriangle[hashes[j]]) edgeHashToTriangle[hashes[j]] = [];\n        edgeHashToTriangle[hashes[j]].push(index);\n\n        // Edge Length\n        if (! edgeLength[hashes[j]]) {\n          if (j === 0 || j === 1) edgeLength[hashes[j]] = _vector0.distanceTo(_vector1);\n          if (j === 2 || j === 3) edgeLength[hashes[j]] = _vector1.distanceTo(_vector2);\n          if (j === 4 || j === 5) edgeLength[hashes[j]] = _vector2.distanceTo(_vector0);\n        }\n      }\n\n      // Triangle Edge Reference\n      triangleEdgeHashes.push([ hashes[0], hashes[2], hashes[4] ]);\n    }\n\n    ///// Build Geometry, Set Attributes\n    attributeList.forEach((attributeName) => {\n      const attribute = existing.getAttribute(attributeName);\n      if (! attribute) return;\n      const floatArray = splitAttribute(attribute, attributeName);\n      split.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, attribute.itemSize));\n    });\n\n    ///// Morph Attributes\n    const morphAttributes = existing.morphAttributes;\n    for (const attributeName in morphAttributes) {\n      const array = [];\n      const morphAttribute = morphAttributes[attributeName];\n\n      // Process Array of Float32BufferAttributes\n      for (let i = 0, l = morphAttribute.length; i < l; i++) {\n        if (morphAttribute[i].count !== vertexCount) continue;\n        const floatArray = splitAttribute(morphAttribute[i], attributeName, true);\n        array.push(new THREE.BufferAttribute(floatArray, morphAttribute[i].itemSize));\n      }\n      split.morphAttributes[attributeName] = array;\n    }\n    split.morphTargetsRelative = existing.morphTargetsRelative;\n\n    // Clean Up, Return New Geometry\n    existing.dispose();\n    return split;\n\n    // Loop Subdivide Function\n    function splitAttribute(attribute, attributeName, morph = false) {\n      const newTriangles = 4; /* maximum number of new triangles */\n      const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;\n      const floatArray = new attribute.array.constructor(arrayLength);\n\n      const processGroups = (attributeName === 'position' && ! morph && existing.groups.length > 0);\n      let groupStart = undefined, groupMaterial = undefined;\n\n      let index = 0;\n      let skipped = 0;\n      let step = attribute.itemSize;\n      for (let i = 0; i < vertexCount; i += 3) {\n\n        // Verify Triangle is Valid\n        if (! triangleExist[i / 3]) {\n          skipped += 3;\n          continue;\n        }\n\n        // Get Triangle Points\n        _vector0.fromBufferAttribute(attribute, i + 0);\n        _vector1.fromBufferAttribute(attribute, i + 1);\n        _vector2.fromBufferAttribute(attribute, i + 2);\n\n        // Check for Shared Edges\n        const existingIndex = i / 3;\n        const edgeHash0to1 = triangleEdgeHashes[existingIndex][0];\n        const edgeHash1to2 = triangleEdgeHashes[existingIndex][1];\n        const edgeHash2to0 = triangleEdgeHashes[existingIndex][2];\n\n        const edgeCount0to1 = edgeHashToTriangle[edgeHash0to1].length;\n        const edgeCount1to2 = edgeHashToTriangle[edgeHash1to2].length;\n        const edgeCount2to0 = edgeHashToTriangle[edgeHash2to0].length;\n        const sharedCount = (edgeCount0to1 + edgeCount1to2 + edgeCount2to0) - 3;\n\n        // New Index (Before New Triangles, used for Groups)\n        const loopStartIndex = ((index * 3) / step) / 3;\n\n        // No Shared Edges\n        if (sharedCount === 0) {\n          setTriangle(floatArray, index, step, _vector0, _vector1, _vector2); index += (step * 3);\n\n          // Shared Edges\n        } else {\n          const length0to1 = edgeLength[edgeHash0to1];\n          const length1to2 = edgeLength[edgeHash1to2];\n          const length2to0 = edgeLength[edgeHash2to0];\n\n          // Add New Triangle Positions\n          if ((length0to1 > length1to2 || edgeCount1to2 <= 1) &&\n              (length0to1 > length2to0 || edgeCount2to0 <= 1) && edgeCount0to1 > 1) {\n            _center.copy(_vector0).add(_vector1).divideScalar(2.0);\n            if (edgeCount2to0 > 1) {\n              _midpoint.copy(_vector2).add(_vector0).divideScalar(2.0);\n              setTriangle(floatArray, index, step, _vector0, _center, _midpoint); index += (step * 3);\n              setTriangle(floatArray, index, step, _center, _vector2, _midpoint); index += (step * 3);\n            } else {\n              setTriangle(floatArray, index, step, _vector0, _center, _vector2); index += (step * 3);\n            }\n            if (edgeCount1to2 > 1) {\n              _midpoint.copy(_vector1).add(_vector2).divideScalar(2.0);\n              setTriangle(floatArray, index, step, _center, _vector1, _midpoint); index += (step * 3);\n              setTriangle(floatArray, index, step, _midpoint, _vector2, _center); index += (step * 3);\n            } else {\n              setTriangle(floatArray, index, step, _vector1, _vector2, _center); index += (step * 3);\n            }\n\n          } else if ((length1to2 > length2to0 || edgeCount2to0 <= 1) && edgeCount1to2 > 1) {\n            _center.copy(_vector1).add(_vector2).divideScalar(2.0);\n            if (edgeCount0to1 > 1) {\n              _midpoint.copy(_vector0).add(_vector1).divideScalar(2.0);\n              setTriangle(floatArray, index, step, _center, _midpoint, _vector1); index += (step * 3);\n              setTriangle(floatArray, index, step, _midpoint, _center, _vector0); index += (step * 3);\n            } else {\n              setTriangle(floatArray, index, step, _vector1, _center, _vector0); index += (step * 3);\n            }\n            if (edgeCount2to0 > 1) {\n              _midpoint.copy(_vector2).add(_vector0).divideScalar(2.0);\n              setTriangle(floatArray, index, step, _center, _vector2, _midpoint); index += (step * 3);\n              setTriangle(floatArray, index, step, _midpoint, _vector0, _center); index += (step * 3);\n            } else {\n              setTriangle(floatArray, index, step, _vector2, _vector0, _center); index += (step * 3);\n            }\n\n          } else if (edgeCount2to0 > 1) {\n            _center.copy(_vector2).add(_vector0).divideScalar(2.0);\n            if (edgeCount1to2 > 1) {\n              _midpoint.copy(_vector1).add(_vector2).divideScalar(2.0);\n              setTriangle(floatArray, index, step, _vector2, _center, _midpoint); index += (step * 3);\n              setTriangle(floatArray, index, step, _center, _vector1, _midpoint); index += (step * 3);\n            } else {\n              setTriangle(floatArray, index, step, _vector2, _center, _vector1); index += (step * 3);\n            }\n            if (edgeCount0to1 > 1) {\n              _midpoint.copy(_vector0).add(_vector1).divideScalar(2.0);\n              setTriangle(floatArray, index, step, _vector0, _midpoint, _center); index += (step * 3);\n              setTriangle(floatArray, index, step, _midpoint, _vector1, _center); index += (step * 3);\n            } else {\n              setTriangle(floatArray, index, step, _vector0, _vector1, _center); index += (step * 3);\n            }\n\n          } else {\n            setTriangle(floatArray, index, step, _vector0, _vector1, _vector2); index += (step * 3);\n          }\n        }\n\n        // Process Groups\n        if (processGroups) {\n          existing.groups.forEach((group) => {\n            if (group.start === (i - skipped)) {\n              if (groupStart !== undefined && groupMaterial !== undefined) {\n                split.addGroup(groupStart, loopStartIndex - groupStart, groupMaterial);\n              }\n              groupStart = loopStartIndex;\n              groupMaterial = group.materialIndex;\n            }\n          });\n        }\n\n        // Reset Skipped Triangle Counter\n        skipped = 0;\n      }\n\n      // Resize Array\n      const reducedCount = (index * 3) / step;\n      const reducedArray = new attribute.array.constructor(reducedCount);\n      for (let i = 0; i < reducedCount; i++) {\n        reducedArray[i] = floatArray[i];\n      }\n\n      // Final Group\n      if (processGroups && groupStart !== undefined && groupMaterial !== undefined) {\n        split.addGroup(groupStart, (((index * 3) / step) / 3) - groupStart, groupMaterial);\n      }\n\n      return reducedArray;\n    }\n  }\n\n  /////////////////////////////////////////////////////////////////////////////////////\n  /////   Flat\n  ////////////////////\n\n  /** Applies one iteration of Loop (flat) subdivision (1 triangle split into 4 triangles) */\n  static flat(geometry) {\n\n    ///// Geometries\n    if (! verifyGeometry(geometry)) return geometry;\n    const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();\n    const loop = new THREE.BufferGeometry();\n\n    ///// Attributes\n    const attributeList = gatherAttributes(existing);\n    const vertexCount = existing.attributes.position.count;\n\n    ///// Build Geometry\n    attributeList.forEach((attributeName) => {\n      const attribute = existing.getAttribute(attributeName);\n      if (! attribute) return;\n\n      loop.setAttribute(attributeName, LoopSubdivision.flatAttribute(attribute, vertexCount));\n    });\n\n    ///// Morph Attributes\n    const morphAttributes = existing.morphAttributes;\n    for (const attributeName in morphAttributes) {\n      const array = [];\n      const morphAttribute = morphAttributes[attributeName];\n\n      // Process Array of Float32BufferAttributes\n      for (let i = 0, l = morphAttribute.length; i < l; i++) {\n        if (morphAttribute[i].count !== vertexCount) continue;\n        array.push(LoopSubdivision.flatAttribute(morphAttribute[i], vertexCount));\n      }\n      loop.morphAttributes[attributeName] = array;\n    }\n    loop.morphTargetsRelative = existing.morphTargetsRelative;\n\n    ///// Clean Up\n    existing.dispose();\n    return loop;\n  }\n\n  static flatAttribute(attribute, vertexCount) {\n    const newTriangles = 4;\n    const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;\n    const floatArray = new attribute.array.constructor(arrayLength);\n\n    let index = 0;\n    let step = attribute.itemSize;\n    for (let i = 0; i < vertexCount; i += 3) {\n\n      // Original Vertices\n      _vector0.fromBufferAttribute(attribute, i + 0);\n      _vector1.fromBufferAttribute(attribute, i + 1);\n      _vector2.fromBufferAttribute(attribute, i + 2);\n\n      // Midpoints\n      _vec0to1.copy(_vector0).add(_vector1).divideScalar(2.0);\n      _vec1to2.copy(_vector1).add(_vector2).divideScalar(2.0);\n      _vec2to0.copy(_vector2).add(_vector0).divideScalar(2.0);\n\n      // Add New Triangle Positions\n      setTriangle(floatArray, index, step, _vector0, _vec0to1, _vec2to0); index += (step * 3);\n      setTriangle(floatArray, index, step, _vector1, _vec1to2, _vec0to1); index += (step * 3);\n      setTriangle(floatArray, index, step, _vector2, _vec2to0, _vec1to2); index += (step * 3);\n      setTriangle(floatArray, index, step, _vec0to1, _vec1to2, _vec2to0); index += (step * 3);\n    }\n\n    return new THREE.BufferAttribute(floatArray, attribute.itemSize);\n  }\n\n  /////////////////////////////////////////////////////////////////////////////////////\n  /////   Smooth\n  ////////////////////\n\n  /** Applies one iteration of Loop (smooth) subdivision (1 triangle split into 4 triangles) */\n  static smooth(geometry, params = {}) {\n\n    if (typeof params !== 'object') params = {};\n\n    ///// Parameters\n    if (params.uvSmooth === undefined) params.uvSmooth = false;\n    if (params.preserveEdges === undefined) params.preserveEdges = false;\n\n    ///// Geometries\n    if (! verifyGeometry(geometry)) return geometry;\n    const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();\n    const flat = LoopSubdivision.flat(existing);\n    const loop = new THREE.BufferGeometry();\n\n    ///// Attributes\n    const attributeList = gatherAttributes(existing);\n    const vertexCount = existing.attributes.position.count;\n    const posAttribute = existing.getAttribute('position');\n    const flatPosition = flat.getAttribute('position');\n    const hashToIndex = {};             // Position hash mapped to index values of same position\n    const existingNeighbors = {};       // Position hash mapped to existing vertex neighbors\n    const flatOpposites = {};           // Position hash mapped to new edge point opposites\n    const existingEdges = {};\n\n    function addNeighbor(posHash, neighborHash, index) {\n      if (! existingNeighbors[posHash]) existingNeighbors[posHash] = {};\n      if (! existingNeighbors[posHash][neighborHash]) existingNeighbors[posHash][neighborHash] = [];\n      existingNeighbors[posHash][neighborHash].push(index);\n    }\n\n    function addOpposite(posHash, index) {\n      if (! flatOpposites[posHash]) flatOpposites[posHash] = [];\n      flatOpposites[posHash].push(index);\n    }\n\n    function addEdgePoint(posHash, edgeHash) {\n      if (! existingEdges[posHash]) existingEdges[posHash] = new Set();\n      existingEdges[posHash].add(edgeHash);\n    }\n\n    ///// Existing Vertex Hashes\n    for (let i = 0; i < vertexCount; i += 3) {\n      const posHash0 = hashFromVector(_vertex[0].fromBufferAttribute(posAttribute, i + 0));\n      const posHash1 = hashFromVector(_vertex[1].fromBufferAttribute(posAttribute, i + 1));\n      const posHash2 = hashFromVector(_vertex[2].fromBufferAttribute(posAttribute, i + 2));\n\n      // Neighbors (of Existing Geometry)\n      addNeighbor(posHash0, posHash1, i + 1);\n      addNeighbor(posHash0, posHash2, i + 2);\n      addNeighbor(posHash1, posHash0, i + 0);\n      addNeighbor(posHash1, posHash2, i + 2);\n      addNeighbor(posHash2, posHash0, i + 0);\n      addNeighbor(posHash2, posHash1, i + 1);\n\n      // Opposites (of new FlatSubdivided vertices)\n      _vec0to1.copy(_vertex[0]).add(_vertex[1]).divideScalar(2.0);\n      _vec1to2.copy(_vertex[1]).add(_vertex[2]).divideScalar(2.0);\n      _vec2to0.copy(_vertex[2]).add(_vertex[0]).divideScalar(2.0);\n      const hash0to1 = hashFromVector(_vec0to1);\n      const hash1to2 = hashFromVector(_vec1to2);\n      const hash2to0 = hashFromVector(_vec2to0);\n      addOpposite(hash0to1, i + 2);\n      addOpposite(hash1to2, i + 0);\n      addOpposite(hash2to0, i + 1);\n\n      // Track Edges for 'edgePreserve'\n      addEdgePoint(posHash0, hash0to1);\n      addEdgePoint(posHash0, hash2to0);\n      addEdgePoint(posHash1, hash0to1);\n      addEdgePoint(posHash1, hash1to2);\n      addEdgePoint(posHash2, hash1to2);\n      addEdgePoint(posHash2, hash2to0);\n    }\n\n    ///// Flat Position to Index Map\n    for (let i = 0; i < flat.attributes.position.count; i++) {\n      const posHash = hashFromVector(_temp.fromBufferAttribute(flatPosition, i));\n      if (! hashToIndex[posHash]) hashToIndex[posHash] = [];\n      hashToIndex[posHash].push(i);\n    }\n\n    ///// Build Geometry, Set Attributes\n    attributeList.forEach((attributeName) => {\n      const existingAttribute = existing.getAttribute(attributeName);\n      const flatAttribute = flat.getAttribute(attributeName);\n      if (existingAttribute === undefined || flatAttribute === undefined) return;\n\n      const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);\n      loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));\n    });\n\n    ///// Morph Attributes\n    const morphAttributes = existing.morphAttributes;\n    for (const attributeName in morphAttributes) {\n      const array = [];\n      const morphAttribute = morphAttributes[attributeName];\n\n      // Process Array of Float32BufferAttributes\n      for (let i = 0, l = morphAttribute.length; i < l; i++) {\n        if (morphAttribute[i].count !== vertexCount) continue;\n        const existingAttribute = morphAttribute[i];\n        const flatAttribute = LoopSubdivision.flatAttribute(morphAttribute[i], morphAttribute[i].count)\n\n        const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);\n        array.push(new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));\n      }\n      loop.morphAttributes[attributeName] = array;\n    }\n    loop.morphTargetsRelative = existing.morphTargetsRelative;\n\n    ///// Clean Up\n    flat.dispose();\n    existing.dispose();\n    return loop;\n\n    //////////\n\n    // Loop Subdivide Function\n    function subdivideAttribute(attributeName, existingAttribute, flatAttribute) {\n      const arrayLength = (flat.attributes.position.count * flatAttribute.itemSize);\n      const floatArray = new existingAttribute.array.constructor(arrayLength);\n\n      // Process Triangles\n      let index = 0;\n      for (let i = 0; i < flat.attributes.position.count; i += 3) {\n\n        // Process Triangle Points\n        for (let v = 0; v < 3; v++) {\n\n          if (attributeName === 'uv' && ! params.uvSmooth) {\n\n            _vertex[v].fromBufferAttribute(flatAttribute, i + v);\n\n          } else if (attributeName === 'normal') { // && params.normalSmooth) {\n\n            _position[v].fromBufferAttribute(flatPosition, i + v);\n            const positionHash = hashFromVector(_position[v]);\n            const positions = hashToIndex[positionHash];\n\n            const k = Object.keys(positions).length;\n            const beta = 0.75 / k;\n            const startWeight = 1.0 - (beta * k);\n\n            _vertex[v].fromBufferAttribute(flatAttribute, i + v);\n            _vertex[v].multiplyScalar(startWeight);\n\n            positions.forEach(positionIndex => {\n              _average.fromBufferAttribute(flatAttribute, positionIndex);\n              _average.multiplyScalar(beta);\n              _vertex[v].add(_average);\n            });\n\n\n          } else { // 'position', 'color', etc...\n\n            _vertex[v].fromBufferAttribute(flatAttribute, i + v);\n            _position[v].fromBufferAttribute(flatPosition, i + v);\n\n            const positionHash = hashFromVector(_position[v]);\n            const neighbors = existingNeighbors[positionHash];\n            const opposites = flatOpposites[positionHash];\n\n            ///// Adjust Source Vertex\n            if (neighbors) {\n\n              // Check Edges have even Opposite Points\n              if (params.preserveEdges) {\n                const edgeSet = existingEdges[positionHash];\n                let hasPair = true;\n                for (const edgeHash of edgeSet) {\n                  if (flatOpposites[edgeHash].length % 2 !== 0) hasPair = false;\n                }\n                if (! hasPair) continue;\n              }\n\n              // Number of Neighbors\n              const k = Object.keys(neighbors).length;\n\n              ///// Loop's Formula\n              const beta = 1 / k * ((5/8) - Math.pow((3/8) + (1/4) * Math.cos(2 * Math.PI / k), 2));\n\n              ///// Warren's Formula\n              // const beta = (k > 3) ? 3 / (8 * k) : ((k === 3) ? 3 / 16 : 0);\n\n              ///// Stevinz' Formula\n              // const beta = 0.5 / k;\n\n              ///// Average with Neighbors\n              const startWeight = 1.0 - (beta * k);\n              _vertex[v].multiplyScalar(startWeight);\n\n              for (let neighborHash in neighbors) {\n                const neighborIndices = neighbors[neighborHash];\n\n                _average.set(0, 0, 0);\n                for (let j = 0; j < neighborIndices.length; j++) {\n                  _average.add(_temp.fromBufferAttribute(existingAttribute, neighborIndices[j]));\n                }\n                _average.divideScalar(neighborIndices.length);\n\n                _average.multiplyScalar(beta);\n                _vertex[v].add(_average);\n              }\n\n              ///// Newly Added Edge Vertex\n            } else if (opposites && opposites.length === 2) {\n              const k = opposites.length;\n              const beta = 0.125; /* 1/8 */\n              const startWeight = 1.0 - (beta * k);\n              _vertex[v].multiplyScalar(startWeight);\n\n              opposites.forEach(oppositeIndex => {\n                _average.fromBufferAttribute(existingAttribute, oppositeIndex);\n                _average.multiplyScalar(beta);\n                _vertex[v].add(_average);\n              });\n            }\n          }\n        }\n\n        // Add New Triangle Position\n        setTriangle(floatArray, index, flatAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);\n        index += (flatAttribute.itemSize * 3);\n      }\n\n      return floatArray;\n    }\n\n  }\n\n}\n\n/////////////////////////////////////////////////////////////////////////////////////\n/////   Local Functions, Hash\n/////////////////////////////////////////////////////////////////////////////////////\n\nconst _positionShift = Math.pow(10, POSITION_DECIMALS);\n\n/** Compares two numbers to see if they're almost the same */\nfunction fuzzy(a, b, tolerance = 0.00001) {\n  return ((a < (b + tolerance)) && (a > (b - tolerance)));\n}\n\n/** Generates hash strong from Number */\nfunction hashFromNumber(num, shift = _positionShift) {\n  let roundedNumber = round(num * shift);\n  if (roundedNumber == 0) roundedNumber = 0; /* prevent -0 (signed 0 can effect Math.atan2(), etc.) */\n  return `${roundedNumber}`;\n}\n\n/** Generates hash strong from Vector3 */\nfunction hashFromVector(vector, shift = _positionShift) {\n  return `${hashFromNumber(vector.x, shift)},${hashFromNumber(vector.y, shift)},${hashFromNumber(vector.z, shift)}`;\n}\n\nfunction round(x) {\n  return (x + ((x > 0) ? 0.5 : -0.5)) << 0;\n}\n\n/////////////////////////////////////////////////////////////////////////////////////\n/////   Local Functions, Geometry\n/////////////////////////////////////////////////////////////////////////////////////\n\nfunction calcNormal(target, vec1, vec2, vec3) {\n  _temp.subVectors(vec1, vec2);\n  target.subVectors(vec2, vec3);\n  target.cross(_temp).normalize();\n}\n\nfunction gatherAttributes(geometry) {\n  const desired = [ 'position', 'normal', 'uv' ];\n  const contains = Object.keys(geometry.attributes);\n  const attributeList = Array.from(new Set(desired.concat(contains)));\n  return attributeList;\n}\n\nfunction setTriangle(positions, index, step, vec0, vec1, vec2) {\n  if (step >= 1) {\n    positions[index + 0 + (step * 0)] = vec0.x;\n    positions[index + 0 + (step * 1)] = vec1.x;\n    positions[index + 0 + (step * 2)] = vec2.x;\n  }\n  if (step >= 2) {\n    positions[index + 1 + (step * 0)] = vec0.y;\n    positions[index + 1 + (step * 1)] = vec1.y;\n    positions[index + 1 + (step * 2)] = vec2.y;\n  }\n  if (step >= 3) {\n    positions[index + 2 + (step * 0)] = vec0.z;\n    positions[index + 2 + (step * 1)] = vec1.z;\n    positions[index + 2 + (step * 2)] = vec2.z;\n  }\n  if (step >= 4) {\n    positions[index + 3 + (step * 0)] = vec0.w;\n    positions[index + 3 + (step * 1)] = vec1.w;\n    positions[index + 3 + (step * 2)] = vec2.w;\n  }\n}\n\nfunction verifyGeometry(geometry) {\n  if (geometry === undefined) {\n    console.warn(`LoopSubdivision: Geometry provided is undefined`);\n    return false;\n  }\n\n  if (! geometry.isBufferGeometry) {\n    console.warn(`LoopSubdivision: Geometry provided is not 'BufferGeometry' type`);\n    return false;\n  }\n\n  if (geometry.attributes.position === undefined) {\n    console.warn(`LoopSubdivision: Geometry provided missing required 'position' attribute`);\n    return false;\n  }\n\n  if (geometry.attributes.normal === undefined) {\n    geometry.computeVertexNormals();\n  }\n  return true;\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvTG9vcFN1YmRpdmlzaW9uLm1qcy5qcyIsInNvdXJjZXMiOlsid2VicGFjazovLy8uL3NyYy9Mb29wU3ViZGl2aXNpb24ubWpzP2RiNzciXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXG4gKiBAZGVzY3JpcHRpb24gTG9vcCBTdWJkaXZpc2lvbiBTdXJmYWNlXG4gKiBAYWJvdXQgICAgICAgU21vb3RoIHN1YmRpdmlzaW9uIHN1cmZhY2UgbW9kaWZpZXIgZm9yIHVzZSB3aXRoIHRocmVlLmpzIEJ1ZmZlckdlb21ldHJ5LlxuICogQGF1dGhvciAgICAgIFN0ZXBoZW5zIE51bm5hbGx5IDxAc3Rldmluej5cbiAqIEBsaWNlbnNlICAgICBNSVQgLSBDb3B5cmlnaHQgKGMpIDIwMjIgU3RlcGhlbnMgTnVubmFsbHlcbiAqIEBzb3VyY2UgICAgICBodHRwczovL2dpdGh1Yi5jb20vc3Rldmluei90aHJlZS1zdWJkaXZpZGVcbiAqL1xuLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vL1xuLy9cbi8vICBGdW5jdGlvbnNcbi8vICAgICAgbW9kaWZ5ICAgICAgICAgICAgICBBcHBsaWVzIExvb3Agc3ViZGl2aXNpb24gdG8gQnVmZmVyR2VvbWV0cnksIHJldHVybnMgbmV3IEJ1ZmZlckdlb21ldHJ5XG4vLyAgICAgIGVkZ2VTcGxpdCAgICAgICAgICAgU3BsaXRzIGFsbCB0cmlhbmdsZXMgYXQgZWRnZXMgc2hhcmVkIGJ5IGNvcGxhbmFyIHRyaWFuZ2xlc1xuLy8gICAgICBmbGF0ICAgICAgICAgICAgICAgIE9uZSBpdGVyYXRpb24gb2YgTG9vcCBzdWJkaXZpc2lvbiwgd2l0aG91dCBwb2ludCBhdmVyYWdpbmdcbi8vICAgICAgc21vb3RoICAgICAgICAgICAgICBPbmUgaXRlcmF0aW9uIG9mIExvb3Agc3ViZGl2aXNpb24sIHdpdGggcG9pbnQgYXZlcmFnaW5nXG4vL1xuLy8gIEluZm9cbi8vICAgICAgVGhpcyBtb2RpZmllciB1c2VzIHRoZSBMb29wIChDaGFybGVzIExvb3AsIDE5ODcpIHN1YmRpdmlzaW9uIHN1cmZhY2UgYWxnb3JpdGhtIHRvIHNtb290aFxuLy8gICAgICBtb2Rlcm4gdGhyZWUuanMgQnVmZmVyR2VvbWV0cnkuXG4vL1xuLy8gICAgICBBdCBvbmUgcG9pbnQsIHRocmVlLmpzIGluY2x1ZGVkIGEgc3ViZGl2aXNpb24gc3VyZmFjZSBtb2RpZmllciBpbiB0aGUgZXh0ZW5kZWQgZXhhbXBsZXMgKHNlZSBib3R0b21cbi8vICAgICAgb2YgZmlsZSBmb3IgbGlua3MpLCBpdCB3YXMgcmVtb3ZlZCBpbiByMTI1LiBUaGUgbW9kaWZpZXIgd2FzIG9yaWdpbmFsbHkgYmFzZWQgb24gdGhlIENhdG11bGwtQ2xhcmtcbi8vICAgICAgYWxnb3JpdGhtLCB3aGljaCB3b3JrcyBiZXN0IGZvciBnZW9tZXRyeSB3aXRoIGNvbnZleCBjb3BsYW5hciBuLWdvbiBmYWNlcy4gSW4gdGhyZWUuanMgcjYwIHRoZSBtb2RpZmllclxuLy8gICAgICB3YXMgY2hhbmdlZCB0byB1dGlsaXplIHRoZSBMb29wIGFsZ29yaXRobS4gVGhlIExvb3AgYWxnb3JpdGhtIHdhcyBkZXNpZ25lZCB0byB3b3JrIGJldHRlciB3aXRoIHRyaWFuZ2xlXG4vLyAgICAgIGJhc2VkIG1lc2hlcy5cbi8vXG4vLyAgICAgIFRoZSBMb29wIGFsZ29yaXRobSwgaG93ZXZlciwgZG9lc24ndCBhbHdheXMgcHJvdmlkZSB1bmlmb3JtIHJlc3VsdHMgYXMgdGhlIHZlcnRpY2VzIGFyZVxuLy8gICAgICBza2V3ZWQgdG93YXJkIHRoZSBtb3N0IHVzZWQgdmVydGV4IHBvc2l0aW9ucy4gQSB0cmlhbmdsZSBiYXNlZCBib3ggKGUuZy4gQm94R2VvbWV0cnkgZm9yIGV4YW1wbGUpIHdpbGxcbi8vICAgICAgdGVuZCB0byBmYXZvciB0aGUgY29ybmVycy4gVG8gYWxsZXZpYXRlIHRoaXMgaXNzdWUsIHRoaXMgaW1wbGVtZW50YXRpb24gaW5jbHVkZXMgYW4gaW5pdGlhbCBwYXNzIHRvIHNwbGl0XG4vLyAgICAgIGNvcGxhbmFyIGZhY2VzIGF0IHRoZWlyIHNoYXJlZCBlZGdlcy4gSXQgc3RhcnRzIGJ5IHNwbGl0dGluZyBhbG9uZyB0aGUgbG9uZ2VzdCBzaGFyZWQgZWRnZSBmaXJzdCwgYW5kIHRoZW5cbi8vICAgICAgZnJvbSB0aGF0IG1pZHBvaW50IGl0IHNwbGl0cyB0byBhbnkgcmVtYWluaW5nIGNvcGxhbmFyIHNoYXJlZCBlZGdlcy5cbi8vXG4vLyAgICAgIEFsc28gYnkgZGVmYXVsdCwgdGhpcyBpbXBsZW1lbnRhdGlvbiBpbnNlcnRzIG5ldyB1diBjb29yZGluYXRlcywgYnV0IGRvZXMgbm90IGF2ZXJhZ2UgdGhlbSB1c2luZyB0aGUgTG9vcFxuLy8gICAgICBhbGdvcml0aG0uIEluIHNvbWUgY2FzZXMgKG9mdGVuIGluIGZsYXQgZ2VvbWV0cmllcykgdGhpcyB3aWxsIHByb2R1Y2UgdW5kZXNpcmVkIHJlc3VsdHMsIGFcbi8vICAgICAgbm90aWNlYWJsZSB0ZWFyaW5nIHdpbGwgb2NjdXIuIEluIHN1Y2ggY2FzZXMsIHRyeSBwYXNzaW5nICd1dlNtb290aCcgYXMgdHJ1ZSB0byBlbmFibGUgdXYgYXZlcmFnaW5nLlxuLy9cbi8vICBOb3RlKHMpXG4vLyAgICAgIC0gVGhpcyBtb2RpZmllciByZXR1cm5zIGEgbmV3IEJ1ZmZlckdlb21ldHJ5IGluc3RhbmNlLCBpdCBkb2VzIG5vdCBkaXNwb3NlKCkgb2YgdGhlIG9sZCBnZW9tZXRyeS5cbi8vXG4vLyAgICAgIC0gVGhpcyBtb2RpZmllciByZXR1cm5zIGEgTm9uSW5kZXhlZCBnZW9tZXRyeS4gQW4gSW5kZXhlZCBnZW9tZXRyeSBjYW4gYmUgY3JlYXRlZCBieSB1c2luZyB0aGVcbi8vICAgICAgICBCdWZmZXJHZW9tZXRyeVV0aWxzLm1lcmdlVmVydGljZXMoKSBmdW5jdGlvbiwgc2VlOlxuLy8gICAgICAgIGh0dHBzOi8vdGhyZWVqcy5vcmcvZG9jcy8/cT1idWZmZXIjZXhhbXBsZXMvZW4vdXRpbHMvQnVmZmVyR2VvbWV0cnlVdGlscy5tZXJnZVZlcnRpY2VzXG4vL1xuLy8gICAgICAtIFRoaXMgbW9kaWZpZXIgd29ya3MgYmVzdCB3aXRoIGdlb21ldHJ5IHdob3NlIHRyaWFuZ2xlcyBzaGFyZSBlZGdlcyBBTkQgZWRnZSB2ZXJ0aWNlcy4gU2VlIGRpYWdyYW0gYmVsb3cuXG4vL1xuLy8gICAgICAgICAgT0tBWSAgICAgICAgICBOT1QgT0tBWVxuLy8gICAgICAgICAgICBPICAgICAgICAgICAgICBPXG4vLyAgICAgICAgICAgL3xcXCAgICAgICAgICAgIC8gXFxcbi8vICAgICAgICAgIC8gfCBcXCAgICAgICAgICAvICAgXFxcbi8vICAgICAgICAgLyAgfCAgXFwgICAgICAgIC8gICAgIFxcXG4vLyAgICAgICAgTy0tLU8tLS1PICAgICAgTy0tLU8tLS1PXG4vLyAgICAgICAgIFxcICB8ICAvICAgICAgICBcXCAgfCAgL1xuLy8gICAgICAgICAgXFwgfCAvICAgICAgICAgIFxcIHwgL1xuLy8gICAgICAgICAgIFxcfC8gICAgICAgICAgICBcXHwvXG4vLyAgICAgICAgICAgIE8gICAgICAgICAgICAgIE9cbi8vXG4vLyAgUmVmZXJlbmNlKHMpXG4vLyAgICAgIC0gU3ViZGl2aXNpb24gU3VyZmFjZXNcbi8vICAgICAgICAgIGh0dHBzOi8vd3d3Lm1pY3Jvc29mdC5jb20vZW4tdXMvcmVzZWFyY2gvd3AtY29udGVudC91cGxvYWRzLzIwMTYvMDIvdGhlc2lzLTEwLnBkZlxuLy8gICAgICAgICAgaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvTG9vcF9zdWJkaXZpc2lvbl9zdXJmYWNlXG4vLyAgICAgICAgICBodHRwczovL2NzZXdlYi51Y3NkLmVkdS9+YWxjaGVybi90ZWFjaGluZy9jc2UxNjdfZmEyMS82LTNTdXJmYWNlcy5wZGZcbi8vXG4vLyAgICAgIC0gT3JpZ2luYWwgdGhyZWUuanMgU3ViZGl2aXNpb25Nb2RpZmllciwgcjEyNCAoTG9vcClcbi8vICAgICAgICAgIGh0dHBzOi8vZ2l0aHViLmNvbS9tcmRvb2IvdGhyZWUuanMvYmxvYi9yMTI0L2V4YW1wbGVzL2pzbS9tb2RpZmllcnMvU3ViZGl2aXNpb25Nb2RpZmllci5qc1xuLy9cbi8vICAgICAgLSBPcmlnaW5hbCB0aHJlZS5qcyBTdWJkaXZpc2lvbk1vZGlmaWVyLCByNTkgKENhdG11bGwtQ2xhcmspXG4vLyAgICAgICAgICBodHRwczovL2dpdGh1Yi5jb20vbXJkb29iL3RocmVlLmpzL2Jsb2IvcjU5L2V4YW1wbGVzL2pzL21vZGlmaWVycy9TdWJkaXZpc2lvbk1vZGlmaWVyLmpzXG4vL1xuLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vL1xuXG4vLyBpbXBvcnQgKiBhcyBUSFJFRSBmcm9tICd0aHJlZSc7XG5cbi8vLy8vIENvbnN0YW50c1xuXG5jb25zdCBQT1NJVElPTl9ERUNJTUFMUyA9IDI7XG5cbi8vLy8vIExvY2FsIFZhcmlhYmxlc1xuXG5jb25zdCBfYXZlcmFnZSA9IG5ldyBUSFJFRS5WZWN0b3IzKCk7XG5jb25zdCBfY2VudGVyID0gbmV3IFRIUkVFLlZlY3RvcjMoKTtcbmNvbnN0IF9taWRwb2ludCA9IG5ldyBUSFJFRS5WZWN0b3IzKCk7XG5jb25zdCBfbm9ybWFsID0gbmV3IFRIUkVFLlZlY3RvcjMoKTtcbmNvbnN0IF90ZW1wID0gbmV3IFRIUkVFLlZlY3RvcjMoKTtcblxuY29uc3QgX3ZlY3RvcjAgPSBuZXcgVEhSRUUuVmVjdG9yMygpOyAvLyAuVmVjdG9yNCgpO1xuY29uc3QgX3ZlY3RvcjEgPSBuZXcgVEhSRUUuVmVjdG9yMygpOyAvLyAuVmVjdG9yNCgpO1xuY29uc3QgX3ZlY3RvcjIgPSBuZXcgVEhSRUUuVmVjdG9yMygpOyAvLyAuVmVjdG9yNCgpO1xuY29uc3QgX3ZlYzB0bzEgPSBuZXcgVEhSRUUuVmVjdG9yMygpO1xuY29uc3QgX3ZlYzF0bzIgPSBuZXcgVEhSRUUuVmVjdG9yMygpO1xuY29uc3QgX3ZlYzJ0bzAgPSBuZXcgVEhSRUUuVmVjdG9yMygpO1xuXG5jb25zdCBfcG9zaXRpb24gPSBbXG4gIG5ldyBUSFJFRS5WZWN0b3IzKCksXG4gIG5ldyBUSFJFRS5WZWN0b3IzKCksXG4gIG5ldyBUSFJFRS5WZWN0b3IzKCksXG5dO1xuXG5jb25zdCBfdmVydGV4ID0gW1xuICBuZXcgVEhSRUUuVmVjdG9yMygpLFxuICBuZXcgVEhSRUUuVmVjdG9yMygpLFxuICBuZXcgVEhSRUUuVmVjdG9yMygpLFxuXTtcblxuY29uc3QgX3RyaWFuZ2xlID0gbmV3IFRIUkVFLlRyaWFuZ2xlKCk7XG5cbi8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy9cbi8vLy8vICAgTG9vcCBTdWJkaXZpc2lvbiBTdXJmYWNlXG4vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vXG5cbi8qKiBMb29wIHN1YmRpdmlzaW9uIHN1cmZhY2UgbW9kaWZpZXIgZm9yIHVzZSB3aXRoIG1vZGVybiB0aHJlZS5qcyBCdWZmZXJHZW9tZXRyeSAqL1xuZXhwb3J0IGNsYXNzIExvb3BTdWJkaXZpc2lvbiB7XG5cbiAgLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vL1xuICAvLy8vLyAgIE1vZGlmeVxuICAvLy8vLy8vLy8vLy8vLy8vLy8vL1xuXG4gIC8qKlxuICAgKiBBcHBsaWVzIExvb3Agc3ViZGl2aXNpb24gbW9kaWZpZXIgdG8gZ2VvbWV0cnlcbiAgICpcbiAgICogQHBhcmFtIHtPYmplY3R9IGJ1ZmZlckdlb21ldHJ5IC0gVGhyZWUuanMgZ2VvbWV0cnkgdG8gYmUgc3ViZGl2aWRlZFxuICAgKiBAcGFyYW0ge051bWJlcn0gaXRlcmF0aW9ucyAtIEhvdyBtYW55IHRpbWVzIHRvIHJ1biBzdWJkaXZpZGlvblxuICAgKiBAcGFyYW0ge09iamVjdH0gcGFyYW1zIC0gT3B0aW9uYWwgcGFyYW1ldGVycyBvYmplY3QsIHNlZSBiZWxvd1xuICAgKiBAcmV0dXJucyB7T2JqZWN0fSBSZXR1cm5zIG5ldywgc3ViZGl2aWRlZCwgdGhyZWUuanMgQnVmZmVyR2VvbWV0cnkgb2JqZWN0XG4gICAqXG4gICAqIE9wdGlvbmFsIFBhcmFtZXRlcnMgT2JqZWN0XG4gICAqIEBwYXJhbSB7Qm9vbGVhbn0gc3BsaXQgLSBTaG91bGQgY29wbGFuYXIgZmFjZXMgYmUgZGl2aWRlZCBhbG9uZyBzaGFyZWQgZWRnZXMgYmVmb3JlIHJ1bm5pbmcgTG9vcCBzdWJkaXZpc2lvbj9cbiAgICogQHBhcmFtIHtCb29sZWFufSB1dlNtb290aCAtIFNob3VsZCBVViB2YWx1ZXMgYmUgYXZlcmFnZWQgZHVyaW5nIHN1YmRpdmlzaW9uP1xuICAgKiBAcGFyYW0ge0Jvb2xlYW59IHByZXNlcnZlRWRnZXMgLSBTaG91bGQgZWRnZXMgLyBicmVha3MgaW4gZ2VvbWV0cnkgYmUgaWdub3JlZCBkdXJpbmcgc3ViZGl2aXNpb24/XG4gICAqIEBwYXJhbSB7Qm9vbGVhbn0gZmxhdE9ubHkgLSBJZiB0cnVlLCBzdWJkaXZpc2lvbiBnZW5lcmF0ZXMgdHJpYW5nbGVzLCBidXQgZG9lcyBub3QgbW9kaWZ5IHBvc2l0aW9uc1xuICAgKiBAcGFyYW0ge051bWJlcn0gbWF4VHJpYW5nbGVzIC0gSWYgZ2VvbWV0cnkgY29udGFpbnMgbW9yZSB0aGFuIHRoaXMgbWFueSB0cmlhbmdsZXMsIHN1YmRpdmlzaW9uIHdpbGwgbm90IGNvbnRpbnVlXG4gICAqL1xuICBzdGF0aWMgbW9kaWZ5KGJ1ZmZlckdlb21ldHJ5LCBpdGVyYXRpb25zID0gMSwgcGFyYW1zID0ge30pIHtcbiAgICBpZiAoYXJndW1lbnRzLmxlbmd0aCA+IDMpIGNvbnNvbGUud2FybihgTG9vcFN1YmRpdmlzaW9uLm1vZGlmeSgpIG5vdyB1c2VzIGEgcGFyYW1ldGVyIG9iamVjdC4gU2VlIHJlYWRtZSBmb3IgbW9yZSBpbmZvIWApO1xuXG4gICAgaWYgKHR5cGVvZiBwYXJhbXMgIT09ICdvYmplY3QnKSBwYXJhbXMgPSB7fTtcblxuICAgIC8vLy8vIFBhcmFtZXRlcnNcbiAgICBpZiAocGFyYW1zLnNwbGl0ID09PSB1bmRlZmluZWQpIHBhcmFtcy5zcGxpdCA9IHRydWU7XG4gICAgaWYgKHBhcmFtcy51dlNtb290aCA9PT0gdW5kZWZpbmVkKSBwYXJhbXMudXZTbW9vdGggPSBmYWxzZTtcbiAgICBpZiAocGFyYW1zLnByZXNlcnZlRWRnZXMgPT09IHVuZGVmaW5lZCkgcGFyYW1zLnByZXNlcnZlRWRnZXMgPSBmYWxzZTtcbiAgICBpZiAocGFyYW1zLmZsYXRPbmx5ID09PSB1bmRlZmluZWQpIHBhcmFtcy5mbGF0T25seSA9IGZhbHNlO1xuICAgIGlmIChwYXJhbXMubWF4VHJpYW5nbGVzID09PSB1bmRlZmluZWQpIHBhcmFtcy5tYXhUcmlhbmdsZXMgPSBJbmZpbml0eTtcblxuICAgIC8vLy8vIEdlb21ldHJpZXNcbiAgICBpZiAoISB2ZXJpZnlHZW9tZXRyeShidWZmZXJHZW9tZXRyeSkpIHJldHVybiBidWZmZXJHZW9tZXRyeTtcbiAgICBsZXQgbW9kaWZpZWRHZW9tZXRyeSA9IGJ1ZmZlckdlb21ldHJ5LmNsb25lKCk7XG5cbiAgICAvLy8vLyBQcmVzcGxpdFxuICAgIGlmIChwYXJhbXMuc3BsaXQpIHtcbiAgICAgIGNvbnN0IHNwbGl0R2VvbWV0cnkgPSBMb29wU3ViZGl2aXNpb24uZWRnZVNwbGl0KG1vZGlmaWVkR2VvbWV0cnkpXG4gICAgICBtb2RpZmllZEdlb21ldHJ5LmRpc3Bvc2UoKTtcbiAgICAgIG1vZGlmaWVkR2VvbWV0cnkgPSBzcGxpdEdlb21ldHJ5O1xuICAgIH1cblxuICAgIC8vLy8vIEFwcGx5IFN1YmRpdmlzaW9uXG4gICAgZm9yIChsZXQgaSA9IDA7IGkgPCBpdGVyYXRpb25zOyBpKyspIHtcbiAgICAgIGxldCBjdXJyZW50VHJpYW5nbGVzID0gbW9kaWZpZWRHZW9tZXRyeS5hdHRyaWJ1dGVzLnBvc2l0aW9uLmNvdW50IC8gMztcbiAgICAgIGlmIChjdXJyZW50VHJpYW5nbGVzIDwgcGFyYW1zLm1heFRyaWFuZ2xlcykge1xuICAgICAgICBsZXQgc3ViZGl2aWRlZEdlb21ldHJ5O1xuXG4gICAgICAgIC8vIFN1YmRpdmlkZVxuICAgICAgICBpZiAocGFyYW1zLmZsYXRPbmx5KSB7XG4gICAgICAgICAgc3ViZGl2aWRlZEdlb21ldHJ5ID0gTG9vcFN1YmRpdmlzaW9uLmZsYXQobW9kaWZpZWRHZW9tZXRyeSk7XG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgc3ViZGl2aWRlZEdlb21ldHJ5ID0gTG9vcFN1YmRpdmlzaW9uLnNtb290aChtb2RpZmllZEdlb21ldHJ5LCBwYXJhbXMpO1xuICAgICAgICB9XG5cbiAgICAgICAgLy8gQ29weSBhbmQgUmVzaXplIEdyb3Vwc1xuICAgICAgICBtb2RpZmllZEdlb21ldHJ5Lmdyb3Vwcy5mb3JFYWNoKChncm91cCkgPT4ge1xuICAgICAgICAgIHN1YmRpdmlkZWRHZW9tZXRyeS5hZGRHcm91cChncm91cC5zdGFydCAqIDQsIGdyb3VwLmNvdW50ICogNCwgZ3JvdXAubWF0ZXJpYWxJbmRleCk7XG4gICAgICAgIH0pO1xuXG4gICAgICAgIC8vIENsZWFuIFVwXG4gICAgICAgIG1vZGlmaWVkR2VvbWV0cnkuZGlzcG9zZSgpO1xuICAgICAgICBtb2RpZmllZEdlb21ldHJ5ID0gc3ViZGl2aWRlZEdlb21ldHJ5O1xuICAgICAgfVxuICAgIH1cblxuICAgIC8vLy8vIFJldHVybiBOZXcgR2VvbWV0cnlcbiAgICByZXR1cm4gbW9kaWZpZWRHZW9tZXRyeTtcbiAgfVxuXG4gIC8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy9cbiAgLy8vLy8gICBTcGxpdCBIeXBvdGVudXNlXG4gIC8vLy8vLy8vLy8vLy8vLy8vLy8vXG5cbiAgLyoqXG4gICAqIEFwcGxpZXMgb25lIGl0ZXJhdGlvbiBvZiBzcGxpdCBzdWJkaXZpc2lvbi4gU3BsaXRzIGFsbCB0cmlhbmdsZXMgYXQgZWRnZXMgc2hhcmVkIGJ5IGNvcGxhbmFyIHRyaWFuZ2xlcy5cbiAgICogU3RhcnRzIGJ5IHNwbGl0dGluZyBhdCBsb25nZXN0IHNoYXJlZCBlZGdlLCBmb2xsb3dlZCBieSBzcGxpdHRpbmcgZnJvbSB0aGF0IG5ldyBjZW50ZXIgZWRnZSBwb2ludCB0byB0aGVcbiAgICogY2VudGVyIG9mIGFueSBvdGhlciBzaGFyZWQgZWRnZXMuXG4gICAqL1xuICBzdGF0aWMgZWRnZVNwbGl0KGdlb21ldHJ5KSB7XG5cbiAgICAvLy8vLyBHZW9tZXRyaWVzXG4gICAgaWYgKCEgdmVyaWZ5R2VvbWV0cnkoZ2VvbWV0cnkpKSByZXR1cm4gZ2VvbWV0cnk7XG4gICAgY29uc3QgZXhpc3RpbmcgPSAoZ2VvbWV0cnkuaW5kZXggIT09IG51bGwpID8gZ2VvbWV0cnkudG9Ob25JbmRleGVkKCkgOiBnZW9tZXRyeS5jbG9uZSgpO1xuICAgIGNvbnN0IHNwbGl0ID0gbmV3IFRIUkVFLkJ1ZmZlckdlb21ldHJ5KCk7XG5cbiAgICAvLy8vLyBBdHRyaWJ1dGVzXG4gICAgY29uc3QgYXR0cmlidXRlTGlzdCA9IGdhdGhlckF0dHJpYnV0ZXMoZXhpc3RpbmcpO1xuICAgIGNvbnN0IHZlcnRleENvdW50ID0gZXhpc3RpbmcuYXR0cmlidXRlcy5wb3NpdGlvbi5jb3VudDtcbiAgICBjb25zdCBwb3NBdHRyaWJ1dGUgPSBleGlzdGluZy5nZXRBdHRyaWJ1dGUoJ3Bvc2l0aW9uJyk7XG4gICAgY29uc3Qgbm9yQXR0cmlidXRlID0gZXhpc3RpbmcuZ2V0QXR0cmlidXRlKCdub3JtYWwnKTtcbiAgICBjb25zdCBlZGdlSGFzaFRvVHJpYW5nbGUgPSB7fTtcbiAgICBjb25zdCB0cmlhbmdsZUVkZ2VIYXNoZXMgPSBbXTtcbiAgICBjb25zdCBlZGdlTGVuZ3RoID0ge307XG4gICAgY29uc3QgdHJpYW5nbGVFeGlzdCA9IFtdO1xuXG4gICAgLy8vLy8gRWRnZXNcbiAgICBmb3IgKGxldCBpID0gMDsgaSA8IHZlcnRleENvdW50OyBpICs9IDMpIHtcblxuICAgICAgLy8gUG9zaXRpb25zXG4gICAgICBfdmVjdG9yMC5mcm9tQnVmZmVyQXR0cmlidXRlKHBvc0F0dHJpYnV0ZSwgaSArIDApO1xuICAgICAgX3ZlY3RvcjEuZnJvbUJ1ZmZlckF0dHJpYnV0ZShwb3NBdHRyaWJ1dGUsIGkgKyAxKTtcbiAgICAgIF92ZWN0b3IyLmZyb21CdWZmZXJBdHRyaWJ1dGUocG9zQXR0cmlidXRlLCBpICsgMik7XG4gICAgICBfbm9ybWFsLmZyb21CdWZmZXJBdHRyaWJ1dGUobm9yQXR0cmlidXRlLCBpKTtcbiAgICAgIGNvbnN0IHZlY0hhc2gwID0gaGFzaEZyb21WZWN0b3IoX3ZlY3RvcjApO1xuICAgICAgY29uc3QgdmVjSGFzaDEgPSBoYXNoRnJvbVZlY3RvcihfdmVjdG9yMSk7XG4gICAgICBjb25zdCB2ZWNIYXNoMiA9IGhhc2hGcm9tVmVjdG9yKF92ZWN0b3IyKTtcblxuICAgICAgLy8gVmVyaWZ5IEFyZWFcbiAgICAgIGNvbnN0IHRyaWFuZ2xlU2l6ZSA9IF90cmlhbmdsZS5zZXQoX3ZlY3RvcjAsIF92ZWN0b3IxLCBfdmVjdG9yMikuZ2V0QXJlYSgpO1xuICAgICAgdHJpYW5nbGVFeGlzdC5wdXNoKCEgZnV6enkodHJpYW5nbGVTaXplLCAwKSk7XG4gICAgICBpZiAoISB0cmlhbmdsZUV4aXN0W2kgLyAzXSkge1xuICAgICAgICB0cmlhbmdsZUVkZ2VIYXNoZXMucHVzaChbXSk7XG4gICAgICAgIGNvbnRpbnVlO1xuICAgICAgfVxuXG4gICAgICAvLyBDYWxjdWxhdGUgTm9ybWFsc1xuICAgICAgY2FsY05vcm1hbChfbm9ybWFsLCBfdmVjdG9yMCwgX3ZlY3RvcjEsIF92ZWN0b3IyKTtcbiAgICAgIGNvbnN0IG5vcm1hbEhhc2ggPSBoYXNoRnJvbVZlY3Rvcihfbm9ybWFsKTtcblxuICAgICAgLy8gVmVydGV4IEhhc2hlc1xuICAgICAgY29uc3QgaGFzaGVzID0gW1xuICAgICAgICBgJHt2ZWNIYXNoMH1fJHt2ZWNIYXNoMX1fJHtub3JtYWxIYXNofWAsIC8vIFswXTogMHRvMVxuICAgICAgICBgJHt2ZWNIYXNoMX1fJHt2ZWNIYXNoMH1fJHtub3JtYWxIYXNofWAsIC8vIFsxXTogMXRvMFxuICAgICAgICBgJHt2ZWNIYXNoMX1fJHt2ZWNIYXNoMn1fJHtub3JtYWxIYXNofWAsIC8vIFsyXTogMXRvMlxuICAgICAgICBgJHt2ZWNIYXNoMn1fJHt2ZWNIYXNoMX1fJHtub3JtYWxIYXNofWAsIC8vIFszXTogMnRvMVxuICAgICAgICBgJHt2ZWNIYXNoMn1fJHt2ZWNIYXNoMH1fJHtub3JtYWxIYXNofWAsIC8vIFs0XTogMnRvMFxuICAgICAgICBgJHt2ZWNIYXNoMH1fJHt2ZWNIYXNoMn1fJHtub3JtYWxIYXNofWAsIC8vIFs1XTogMHRvMlxuICAgICAgXTtcblxuICAgICAgLy8gU3RvcmUgRWRnZSBIYXNoZXNcbiAgICAgIGNvbnN0IGluZGV4ID0gaSAvIDM7XG4gICAgICBmb3IgKGxldCBqID0gMDsgaiA8IGhhc2hlcy5sZW5ndGg7IGorKykge1xuICAgICAgICAvLyBBdHRhY2ggVHJpYW5nbGUgSW5kZXggdG8gRWRnZSBIYXNoXG4gICAgICAgIGlmICghIGVkZ2VIYXNoVG9UcmlhbmdsZVtoYXNoZXNbal1dKSBlZGdlSGFzaFRvVHJpYW5nbGVbaGFzaGVzW2pdXSA9IFtdO1xuICAgICAgICBlZGdlSGFzaFRvVHJpYW5nbGVbaGFzaGVzW2pdXS5wdXNoKGluZGV4KTtcblxuICAgICAgICAvLyBFZGdlIExlbmd0aFxuICAgICAgICBpZiAoISBlZGdlTGVuZ3RoW2hhc2hlc1tqXV0pIHtcbiAgICAgICAgICBpZiAoaiA9PT0gMCB8fCBqID09PSAxKSBlZGdlTGVuZ3RoW2hhc2hlc1tqXV0gPSBfdmVjdG9yMC5kaXN0YW5jZVRvKF92ZWN0b3IxKTtcbiAgICAgICAgICBpZiAoaiA9PT0gMiB8fCBqID09PSAzKSBlZGdlTGVuZ3RoW2hhc2hlc1tqXV0gPSBfdmVjdG9yMS5kaXN0YW5jZVRvKF92ZWN0b3IyKTtcbiAgICAgICAgICBpZiAoaiA9PT0gNCB8fCBqID09PSA1KSBlZGdlTGVuZ3RoW2hhc2hlc1tqXV0gPSBfdmVjdG9yMi5kaXN0YW5jZVRvKF92ZWN0b3IwKTtcbiAgICAgICAgfVxuICAgICAgfVxuXG4gICAgICAvLyBUcmlhbmdsZSBFZGdlIFJlZmVyZW5jZVxuICAgICAgdHJpYW5nbGVFZGdlSGFzaGVzLnB1c2goWyBoYXNoZXNbMF0sIGhhc2hlc1syXSwgaGFzaGVzWzRdIF0pO1xuICAgIH1cblxuICAgIC8vLy8vIEJ1aWxkIEdlb21ldHJ5LCBTZXQgQXR0cmlidXRlc1xuICAgIGF0dHJpYnV0ZUxpc3QuZm9yRWFjaCgoYXR0cmlidXRlTmFtZSkgPT4ge1xuICAgICAgY29uc3QgYXR0cmlidXRlID0gZXhpc3RpbmcuZ2V0QXR0cmlidXRlKGF0dHJpYnV0ZU5hbWUpO1xuICAgICAgaWYgKCEgYXR0cmlidXRlKSByZXR1cm47XG4gICAgICBjb25zdCBmbG9hdEFycmF5ID0gc3BsaXRBdHRyaWJ1dGUoYXR0cmlidXRlLCBhdHRyaWJ1dGVOYW1lKTtcbiAgICAgIHNwbGl0LnNldEF0dHJpYnV0ZShhdHRyaWJ1dGVOYW1lLCBuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKGZsb2F0QXJyYXksIGF0dHJpYnV0ZS5pdGVtU2l6ZSkpO1xuICAgIH0pO1xuXG4gICAgLy8vLy8gTW9ycGggQXR0cmlidXRlc1xuICAgIGNvbnN0IG1vcnBoQXR0cmlidXRlcyA9IGV4aXN0aW5nLm1vcnBoQXR0cmlidXRlcztcbiAgICBmb3IgKGNvbnN0IGF0dHJpYnV0ZU5hbWUgaW4gbW9ycGhBdHRyaWJ1dGVzKSB7XG4gICAgICBjb25zdCBhcnJheSA9IFtdO1xuICAgICAgY29uc3QgbW9ycGhBdHRyaWJ1dGUgPSBtb3JwaEF0dHJpYnV0ZXNbYXR0cmlidXRlTmFtZV07XG5cbiAgICAgIC8vIFByb2Nlc3MgQXJyYXkgb2YgRmxvYXQzMkJ1ZmZlckF0dHJpYnV0ZXNcbiAgICAgIGZvciAobGV0IGkgPSAwLCBsID0gbW9ycGhBdHRyaWJ1dGUubGVuZ3RoOyBpIDwgbDsgaSsrKSB7XG4gICAgICAgIGlmIChtb3JwaEF0dHJpYnV0ZVtpXS5jb3VudCAhPT0gdmVydGV4Q291bnQpIGNvbnRpbnVlO1xuICAgICAgICBjb25zdCBmbG9hdEFycmF5ID0gc3BsaXRBdHRyaWJ1dGUobW9ycGhBdHRyaWJ1dGVbaV0sIGF0dHJpYnV0ZU5hbWUsIHRydWUpO1xuICAgICAgICBhcnJheS5wdXNoKG5ldyBUSFJFRS5CdWZmZXJBdHRyaWJ1dGUoZmxvYXRBcnJheSwgbW9ycGhBdHRyaWJ1dGVbaV0uaXRlbVNpemUpKTtcbiAgICAgIH1cbiAgICAgIHNwbGl0Lm1vcnBoQXR0cmlidXRlc1thdHRyaWJ1dGVOYW1lXSA9IGFycmF5O1xuICAgIH1cbiAgICBzcGxpdC5tb3JwaFRhcmdldHNSZWxhdGl2ZSA9IGV4aXN0aW5nLm1vcnBoVGFyZ2V0c1JlbGF0aXZlO1xuXG4gICAgLy8gQ2xlYW4gVXAsIFJldHVybiBOZXcgR2VvbWV0cnlcbiAgICBleGlzdGluZy5kaXNwb3NlKCk7XG4gICAgcmV0dXJuIHNwbGl0O1xuXG4gICAgLy8gTG9vcCBTdWJkaXZpZGUgRnVuY3Rpb25cbiAgICBmdW5jdGlvbiBzcGxpdEF0dHJpYnV0ZShhdHRyaWJ1dGUsIGF0dHJpYnV0ZU5hbWUsIG1vcnBoID0gZmFsc2UpIHtcbiAgICAgIGNvbnN0IG5ld1RyaWFuZ2xlcyA9IDQ7IC8qIG1heGltdW0gbnVtYmVyIG9mIG5ldyB0cmlhbmdsZXMgKi9cbiAgICAgIGNvbnN0IGFycmF5TGVuZ3RoID0gKHZlcnRleENvdW50ICogYXR0cmlidXRlLml0ZW1TaXplKSAqIG5ld1RyaWFuZ2xlcztcbiAgICAgIGNvbnN0IGZsb2F0QXJyYXkgPSBuZXcgYXR0cmlidXRlLmFycmF5LmNvbnN0cnVjdG9yKGFycmF5TGVuZ3RoKTtcblxuICAgICAgY29uc3QgcHJvY2Vzc0dyb3VwcyA9IChhdHRyaWJ1dGVOYW1lID09PSAncG9zaXRpb24nICYmICEgbW9ycGggJiYgZXhpc3RpbmcuZ3JvdXBzLmxlbmd0aCA+IDApO1xuICAgICAgbGV0IGdyb3VwU3RhcnQgPSB1bmRlZmluZWQsIGdyb3VwTWF0ZXJpYWwgPSB1bmRlZmluZWQ7XG5cbiAgICAgIGxldCBpbmRleCA9IDA7XG4gICAgICBsZXQgc2tpcHBlZCA9IDA7XG4gICAgICBsZXQgc3RlcCA9IGF0dHJpYnV0ZS5pdGVtU2l6ZTtcbiAgICAgIGZvciAobGV0IGkgPSAwOyBpIDwgdmVydGV4Q291bnQ7IGkgKz0gMykge1xuXG4gICAgICAgIC8vIFZlcmlmeSBUcmlhbmdsZSBpcyBWYWxpZFxuICAgICAgICBpZiAoISB0cmlhbmdsZUV4aXN0W2kgLyAzXSkge1xuICAgICAgICAgIHNraXBwZWQgKz0gMztcbiAgICAgICAgICBjb250aW51ZTtcbiAgICAgICAgfVxuXG4gICAgICAgIC8vIEdldCBUcmlhbmdsZSBQb2ludHNcbiAgICAgICAgX3ZlY3RvcjAuZnJvbUJ1ZmZlckF0dHJpYnV0ZShhdHRyaWJ1dGUsIGkgKyAwKTtcbiAgICAgICAgX3ZlY3RvcjEuZnJvbUJ1ZmZlckF0dHJpYnV0ZShhdHRyaWJ1dGUsIGkgKyAxKTtcbiAgICAgICAgX3ZlY3RvcjIuZnJvbUJ1ZmZlckF0dHJpYnV0ZShhdHRyaWJ1dGUsIGkgKyAyKTtcblxuICAgICAgICAvLyBDaGVjayBmb3IgU2hhcmVkIEVkZ2VzXG4gICAgICAgIGNvbnN0IGV4aXN0aW5nSW5kZXggPSBpIC8gMztcbiAgICAgICAgY29uc3QgZWRnZUhhc2gwdG8xID0gdHJpYW5nbGVFZGdlSGFzaGVzW2V4aXN0aW5nSW5kZXhdWzBdO1xuICAgICAgICBjb25zdCBlZGdlSGFzaDF0bzIgPSB0cmlhbmdsZUVkZ2VIYXNoZXNbZXhpc3RpbmdJbmRleF1bMV07XG4gICAgICAgIGNvbnN0IGVkZ2VIYXNoMnRvMCA9IHRyaWFuZ2xlRWRnZUhhc2hlc1tleGlzdGluZ0luZGV4XVsyXTtcblxuICAgICAgICBjb25zdCBlZGdlQ291bnQwdG8xID0gZWRnZUhhc2hUb1RyaWFuZ2xlW2VkZ2VIYXNoMHRvMV0ubGVuZ3RoO1xuICAgICAgICBjb25zdCBlZGdlQ291bnQxdG8yID0gZWRnZUhhc2hUb1RyaWFuZ2xlW2VkZ2VIYXNoMXRvMl0ubGVuZ3RoO1xuICAgICAgICBjb25zdCBlZGdlQ291bnQydG8wID0gZWRnZUhhc2hUb1RyaWFuZ2xlW2VkZ2VIYXNoMnRvMF0ubGVuZ3RoO1xuICAgICAgICBjb25zdCBzaGFyZWRDb3VudCA9IChlZGdlQ291bnQwdG8xICsgZWRnZUNvdW50MXRvMiArIGVkZ2VDb3VudDJ0bzApIC0gMztcblxuICAgICAgICAvLyBOZXcgSW5kZXggKEJlZm9yZSBOZXcgVHJpYW5nbGVzLCB1c2VkIGZvciBHcm91cHMpXG4gICAgICAgIGNvbnN0IGxvb3BTdGFydEluZGV4ID0gKChpbmRleCAqIDMpIC8gc3RlcCkgLyAzO1xuXG4gICAgICAgIC8vIE5vIFNoYXJlZCBFZGdlc1xuICAgICAgICBpZiAoc2hhcmVkQ291bnQgPT09IDApIHtcbiAgICAgICAgICBzZXRUcmlhbmdsZShmbG9hdEFycmF5LCBpbmRleCwgc3RlcCwgX3ZlY3RvcjAsIF92ZWN0b3IxLCBfdmVjdG9yMik7IGluZGV4ICs9IChzdGVwICogMyk7XG5cbiAgICAgICAgICAvLyBTaGFyZWQgRWRnZXNcbiAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICBjb25zdCBsZW5ndGgwdG8xID0gZWRnZUxlbmd0aFtlZGdlSGFzaDB0bzFdO1xuICAgICAgICAgIGNvbnN0IGxlbmd0aDF0bzIgPSBlZGdlTGVuZ3RoW2VkZ2VIYXNoMXRvMl07XG4gICAgICAgICAgY29uc3QgbGVuZ3RoMnRvMCA9IGVkZ2VMZW5ndGhbZWRnZUhhc2gydG8wXTtcblxuICAgICAgICAgIC8vIEFkZCBOZXcgVHJpYW5nbGUgUG9zaXRpb25zXG4gICAgICAgICAgaWYgKChsZW5ndGgwdG8xID4gbGVuZ3RoMXRvMiB8fCBlZGdlQ291bnQxdG8yIDw9IDEpICYmXG4gICAgICAgICAgICAgIChsZW5ndGgwdG8xID4gbGVuZ3RoMnRvMCB8fCBlZGdlQ291bnQydG8wIDw9IDEpICYmIGVkZ2VDb3VudDB0bzEgPiAxKSB7XG4gICAgICAgICAgICBfY2VudGVyLmNvcHkoX3ZlY3RvcjApLmFkZChfdmVjdG9yMSkuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICBpZiAoZWRnZUNvdW50MnRvMCA+IDEpIHtcbiAgICAgICAgICAgICAgX21pZHBvaW50LmNvcHkoX3ZlY3RvcjIpLmFkZChfdmVjdG9yMCkuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICAgIHNldFRyaWFuZ2xlKGZsb2F0QXJyYXksIGluZGV4LCBzdGVwLCBfdmVjdG9yMCwgX2NlbnRlciwgX21pZHBvaW50KTsgaW5kZXggKz0gKHN0ZXAgKiAzKTtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF9jZW50ZXIsIF92ZWN0b3IyLCBfbWlkcG9pbnQpOyBpbmRleCArPSAoc3RlcCAqIDMpO1xuICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF92ZWN0b3IwLCBfY2VudGVyLCBfdmVjdG9yMik7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgICBpZiAoZWRnZUNvdW50MXRvMiA+IDEpIHtcbiAgICAgICAgICAgICAgX21pZHBvaW50LmNvcHkoX3ZlY3RvcjEpLmFkZChfdmVjdG9yMikuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICAgIHNldFRyaWFuZ2xlKGZsb2F0QXJyYXksIGluZGV4LCBzdGVwLCBfY2VudGVyLCBfdmVjdG9yMSwgX21pZHBvaW50KTsgaW5kZXggKz0gKHN0ZXAgKiAzKTtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF9taWRwb2ludCwgX3ZlY3RvcjIsIF9jZW50ZXIpOyBpbmRleCArPSAoc3RlcCAqIDMpO1xuICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF92ZWN0b3IxLCBfdmVjdG9yMiwgX2NlbnRlcik7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICB9IGVsc2UgaWYgKChsZW5ndGgxdG8yID4gbGVuZ3RoMnRvMCB8fCBlZGdlQ291bnQydG8wIDw9IDEpICYmIGVkZ2VDb3VudDF0bzIgPiAxKSB7XG4gICAgICAgICAgICBfY2VudGVyLmNvcHkoX3ZlY3RvcjEpLmFkZChfdmVjdG9yMikuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICBpZiAoZWRnZUNvdW50MHRvMSA+IDEpIHtcbiAgICAgICAgICAgICAgX21pZHBvaW50LmNvcHkoX3ZlY3RvcjApLmFkZChfdmVjdG9yMSkuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICAgIHNldFRyaWFuZ2xlKGZsb2F0QXJyYXksIGluZGV4LCBzdGVwLCBfY2VudGVyLCBfbWlkcG9pbnQsIF92ZWN0b3IxKTsgaW5kZXggKz0gKHN0ZXAgKiAzKTtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF9taWRwb2ludCwgX2NlbnRlciwgX3ZlY3RvcjApOyBpbmRleCArPSAoc3RlcCAqIDMpO1xuICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF92ZWN0b3IxLCBfY2VudGVyLCBfdmVjdG9yMCk7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgICBpZiAoZWRnZUNvdW50MnRvMCA+IDEpIHtcbiAgICAgICAgICAgICAgX21pZHBvaW50LmNvcHkoX3ZlY3RvcjIpLmFkZChfdmVjdG9yMCkuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICAgIHNldFRyaWFuZ2xlKGZsb2F0QXJyYXksIGluZGV4LCBzdGVwLCBfY2VudGVyLCBfdmVjdG9yMiwgX21pZHBvaW50KTsgaW5kZXggKz0gKHN0ZXAgKiAzKTtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF9taWRwb2ludCwgX3ZlY3RvcjAsIF9jZW50ZXIpOyBpbmRleCArPSAoc3RlcCAqIDMpO1xuICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF92ZWN0b3IyLCBfdmVjdG9yMCwgX2NlbnRlcik7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICB9IGVsc2UgaWYgKGVkZ2VDb3VudDJ0bzAgPiAxKSB7XG4gICAgICAgICAgICBfY2VudGVyLmNvcHkoX3ZlY3RvcjIpLmFkZChfdmVjdG9yMCkuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICBpZiAoZWRnZUNvdW50MXRvMiA+IDEpIHtcbiAgICAgICAgICAgICAgX21pZHBvaW50LmNvcHkoX3ZlY3RvcjEpLmFkZChfdmVjdG9yMikuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICAgIHNldFRyaWFuZ2xlKGZsb2F0QXJyYXksIGluZGV4LCBzdGVwLCBfdmVjdG9yMiwgX2NlbnRlciwgX21pZHBvaW50KTsgaW5kZXggKz0gKHN0ZXAgKiAzKTtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF9jZW50ZXIsIF92ZWN0b3IxLCBfbWlkcG9pbnQpOyBpbmRleCArPSAoc3RlcCAqIDMpO1xuICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF92ZWN0b3IyLCBfY2VudGVyLCBfdmVjdG9yMSk7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgICBpZiAoZWRnZUNvdW50MHRvMSA+IDEpIHtcbiAgICAgICAgICAgICAgX21pZHBvaW50LmNvcHkoX3ZlY3RvcjApLmFkZChfdmVjdG9yMSkuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICAgICAgICAgIHNldFRyaWFuZ2xlKGZsb2F0QXJyYXksIGluZGV4LCBzdGVwLCBfdmVjdG9yMCwgX21pZHBvaW50LCBfY2VudGVyKTsgaW5kZXggKz0gKHN0ZXAgKiAzKTtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF9taWRwb2ludCwgX3ZlY3RvcjEsIF9jZW50ZXIpOyBpbmRleCArPSAoc3RlcCAqIDMpO1xuICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF92ZWN0b3IwLCBfdmVjdG9yMSwgX2NlbnRlcik7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgICAgc2V0VHJpYW5nbGUoZmxvYXRBcnJheSwgaW5kZXgsIHN0ZXAsIF92ZWN0b3IwLCBfdmVjdG9yMSwgX3ZlY3RvcjIpOyBpbmRleCArPSAoc3RlcCAqIDMpO1xuICAgICAgICAgIH1cbiAgICAgICAgfVxuXG4gICAgICAgIC8vIFByb2Nlc3MgR3JvdXBzXG4gICAgICAgIGlmIChwcm9jZXNzR3JvdXBzKSB7XG4gICAgICAgICAgZXhpc3RpbmcuZ3JvdXBzLmZvckVhY2goKGdyb3VwKSA9PiB7XG4gICAgICAgICAgICBpZiAoZ3JvdXAuc3RhcnQgPT09IChpIC0gc2tpcHBlZCkpIHtcbiAgICAgICAgICAgICAgaWYgKGdyb3VwU3RhcnQgIT09IHVuZGVmaW5lZCAmJiBncm91cE1hdGVyaWFsICE9PSB1bmRlZmluZWQpIHtcbiAgICAgICAgICAgICAgICBzcGxpdC5hZGRHcm91cChncm91cFN0YXJ0LCBsb29wU3RhcnRJbmRleCAtIGdyb3VwU3RhcnQsIGdyb3VwTWF0ZXJpYWwpO1xuICAgICAgICAgICAgICB9XG4gICAgICAgICAgICAgIGdyb3VwU3RhcnQgPSBsb29wU3RhcnRJbmRleDtcbiAgICAgICAgICAgICAgZ3JvdXBNYXRlcmlhbCA9IGdyb3VwLm1hdGVyaWFsSW5kZXg7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfSk7XG4gICAgICAgIH1cblxuICAgICAgICAvLyBSZXNldCBTa2lwcGVkIFRyaWFuZ2xlIENvdW50ZXJcbiAgICAgICAgc2tpcHBlZCA9IDA7XG4gICAgICB9XG5cbiAgICAgIC8vIFJlc2l6ZSBBcnJheVxuICAgICAgY29uc3QgcmVkdWNlZENvdW50ID0gKGluZGV4ICogMykgLyBzdGVwO1xuICAgICAgY29uc3QgcmVkdWNlZEFycmF5ID0gbmV3IGF0dHJpYnV0ZS5hcnJheS5jb25zdHJ1Y3RvcihyZWR1Y2VkQ291bnQpO1xuICAgICAgZm9yIChsZXQgaSA9IDA7IGkgPCByZWR1Y2VkQ291bnQ7IGkrKykge1xuICAgICAgICByZWR1Y2VkQXJyYXlbaV0gPSBmbG9hdEFycmF5W2ldO1xuICAgICAgfVxuXG4gICAgICAvLyBGaW5hbCBHcm91cFxuICAgICAgaWYgKHByb2Nlc3NHcm91cHMgJiYgZ3JvdXBTdGFydCAhPT0gdW5kZWZpbmVkICYmIGdyb3VwTWF0ZXJpYWwgIT09IHVuZGVmaW5lZCkge1xuICAgICAgICBzcGxpdC5hZGRHcm91cChncm91cFN0YXJ0LCAoKChpbmRleCAqIDMpIC8gc3RlcCkgLyAzKSAtIGdyb3VwU3RhcnQsIGdyb3VwTWF0ZXJpYWwpO1xuICAgICAgfVxuXG4gICAgICByZXR1cm4gcmVkdWNlZEFycmF5O1xuICAgIH1cbiAgfVxuXG4gIC8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy9cbiAgLy8vLy8gICBGbGF0XG4gIC8vLy8vLy8vLy8vLy8vLy8vLy8vXG5cbiAgLyoqIEFwcGxpZXMgb25lIGl0ZXJhdGlvbiBvZiBMb29wIChmbGF0KSBzdWJkaXZpc2lvbiAoMSB0cmlhbmdsZSBzcGxpdCBpbnRvIDQgdHJpYW5nbGVzKSAqL1xuICBzdGF0aWMgZmxhdChnZW9tZXRyeSkge1xuXG4gICAgLy8vLy8gR2VvbWV0cmllc1xuICAgIGlmICghIHZlcmlmeUdlb21ldHJ5KGdlb21ldHJ5KSkgcmV0dXJuIGdlb21ldHJ5O1xuICAgIGNvbnN0IGV4aXN0aW5nID0gKGdlb21ldHJ5LmluZGV4ICE9PSBudWxsKSA/IGdlb21ldHJ5LnRvTm9uSW5kZXhlZCgpIDogZ2VvbWV0cnkuY2xvbmUoKTtcbiAgICBjb25zdCBsb29wID0gbmV3IFRIUkVFLkJ1ZmZlckdlb21ldHJ5KCk7XG5cbiAgICAvLy8vLyBBdHRyaWJ1dGVzXG4gICAgY29uc3QgYXR0cmlidXRlTGlzdCA9IGdhdGhlckF0dHJpYnV0ZXMoZXhpc3RpbmcpO1xuICAgIGNvbnN0IHZlcnRleENvdW50ID0gZXhpc3RpbmcuYXR0cmlidXRlcy5wb3NpdGlvbi5jb3VudDtcblxuICAgIC8vLy8vIEJ1aWxkIEdlb21ldHJ5XG4gICAgYXR0cmlidXRlTGlzdC5mb3JFYWNoKChhdHRyaWJ1dGVOYW1lKSA9PiB7XG4gICAgICBjb25zdCBhdHRyaWJ1dGUgPSBleGlzdGluZy5nZXRBdHRyaWJ1dGUoYXR0cmlidXRlTmFtZSk7XG4gICAgICBpZiAoISBhdHRyaWJ1dGUpIHJldHVybjtcblxuICAgICAgbG9vcC5zZXRBdHRyaWJ1dGUoYXR0cmlidXRlTmFtZSwgTG9vcFN1YmRpdmlzaW9uLmZsYXRBdHRyaWJ1dGUoYXR0cmlidXRlLCB2ZXJ0ZXhDb3VudCkpO1xuICAgIH0pO1xuXG4gICAgLy8vLy8gTW9ycGggQXR0cmlidXRlc1xuICAgIGNvbnN0IG1vcnBoQXR0cmlidXRlcyA9IGV4aXN0aW5nLm1vcnBoQXR0cmlidXRlcztcbiAgICBmb3IgKGNvbnN0IGF0dHJpYnV0ZU5hbWUgaW4gbW9ycGhBdHRyaWJ1dGVzKSB7XG4gICAgICBjb25zdCBhcnJheSA9IFtdO1xuICAgICAgY29uc3QgbW9ycGhBdHRyaWJ1dGUgPSBtb3JwaEF0dHJpYnV0ZXNbYXR0cmlidXRlTmFtZV07XG5cbiAgICAgIC8vIFByb2Nlc3MgQXJyYXkgb2YgRmxvYXQzMkJ1ZmZlckF0dHJpYnV0ZXNcbiAgICAgIGZvciAobGV0IGkgPSAwLCBsID0gbW9ycGhBdHRyaWJ1dGUubGVuZ3RoOyBpIDwgbDsgaSsrKSB7XG4gICAgICAgIGlmIChtb3JwaEF0dHJpYnV0ZVtpXS5jb3VudCAhPT0gdmVydGV4Q291bnQpIGNvbnRpbnVlO1xuICAgICAgICBhcnJheS5wdXNoKExvb3BTdWJkaXZpc2lvbi5mbGF0QXR0cmlidXRlKG1vcnBoQXR0cmlidXRlW2ldLCB2ZXJ0ZXhDb3VudCkpO1xuICAgICAgfVxuICAgICAgbG9vcC5tb3JwaEF0dHJpYnV0ZXNbYXR0cmlidXRlTmFtZV0gPSBhcnJheTtcbiAgICB9XG4gICAgbG9vcC5tb3JwaFRhcmdldHNSZWxhdGl2ZSA9IGV4aXN0aW5nLm1vcnBoVGFyZ2V0c1JlbGF0aXZlO1xuXG4gICAgLy8vLy8gQ2xlYW4gVXBcbiAgICBleGlzdGluZy5kaXNwb3NlKCk7XG4gICAgcmV0dXJuIGxvb3A7XG4gIH1cblxuICBzdGF0aWMgZmxhdEF0dHJpYnV0ZShhdHRyaWJ1dGUsIHZlcnRleENvdW50KSB7XG4gICAgY29uc3QgbmV3VHJpYW5nbGVzID0gNDtcbiAgICBjb25zdCBhcnJheUxlbmd0aCA9ICh2ZXJ0ZXhDb3VudCAqIGF0dHJpYnV0ZS5pdGVtU2l6ZSkgKiBuZXdUcmlhbmdsZXM7XG4gICAgY29uc3QgZmxvYXRBcnJheSA9IG5ldyBhdHRyaWJ1dGUuYXJyYXkuY29uc3RydWN0b3IoYXJyYXlMZW5ndGgpO1xuXG4gICAgbGV0IGluZGV4ID0gMDtcbiAgICBsZXQgc3RlcCA9IGF0dHJpYnV0ZS5pdGVtU2l6ZTtcbiAgICBmb3IgKGxldCBpID0gMDsgaSA8IHZlcnRleENvdW50OyBpICs9IDMpIHtcblxuICAgICAgLy8gT3JpZ2luYWwgVmVydGljZXNcbiAgICAgIF92ZWN0b3IwLmZyb21CdWZmZXJBdHRyaWJ1dGUoYXR0cmlidXRlLCBpICsgMCk7XG4gICAgICBfdmVjdG9yMS5mcm9tQnVmZmVyQXR0cmlidXRlKGF0dHJpYnV0ZSwgaSArIDEpO1xuICAgICAgX3ZlY3RvcjIuZnJvbUJ1ZmZlckF0dHJpYnV0ZShhdHRyaWJ1dGUsIGkgKyAyKTtcblxuICAgICAgLy8gTWlkcG9pbnRzXG4gICAgICBfdmVjMHRvMS5jb3B5KF92ZWN0b3IwKS5hZGQoX3ZlY3RvcjEpLmRpdmlkZVNjYWxhcigyLjApO1xuICAgICAgX3ZlYzF0bzIuY29weShfdmVjdG9yMSkuYWRkKF92ZWN0b3IyKS5kaXZpZGVTY2FsYXIoMi4wKTtcbiAgICAgIF92ZWMydG8wLmNvcHkoX3ZlY3RvcjIpLmFkZChfdmVjdG9yMCkuZGl2aWRlU2NhbGFyKDIuMCk7XG5cbiAgICAgIC8vIEFkZCBOZXcgVHJpYW5nbGUgUG9zaXRpb25zXG4gICAgICBzZXRUcmlhbmdsZShmbG9hdEFycmF5LCBpbmRleCwgc3RlcCwgX3ZlY3RvcjAsIF92ZWMwdG8xLCBfdmVjMnRvMCk7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICBzZXRUcmlhbmdsZShmbG9hdEFycmF5LCBpbmRleCwgc3RlcCwgX3ZlY3RvcjEsIF92ZWMxdG8yLCBfdmVjMHRvMSk7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICBzZXRUcmlhbmdsZShmbG9hdEFycmF5LCBpbmRleCwgc3RlcCwgX3ZlY3RvcjIsIF92ZWMydG8wLCBfdmVjMXRvMik7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgICBzZXRUcmlhbmdsZShmbG9hdEFycmF5LCBpbmRleCwgc3RlcCwgX3ZlYzB0bzEsIF92ZWMxdG8yLCBfdmVjMnRvMCk7IGluZGV4ICs9IChzdGVwICogMyk7XG4gICAgfVxuXG4gICAgcmV0dXJuIG5ldyBUSFJFRS5CdWZmZXJBdHRyaWJ1dGUoZmxvYXRBcnJheSwgYXR0cmlidXRlLml0ZW1TaXplKTtcbiAgfVxuXG4gIC8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy9cbiAgLy8vLy8gICBTbW9vdGhcbiAgLy8vLy8vLy8vLy8vLy8vLy8vLy9cblxuICAvKiogQXBwbGllcyBvbmUgaXRlcmF0aW9uIG9mIExvb3AgKHNtb290aCkgc3ViZGl2aXNpb24gKDEgdHJpYW5nbGUgc3BsaXQgaW50byA0IHRyaWFuZ2xlcykgKi9cbiAgc3RhdGljIHNtb290aChnZW9tZXRyeSwgcGFyYW1zID0ge30pIHtcblxuICAgIGlmICh0eXBlb2YgcGFyYW1zICE9PSAnb2JqZWN0JykgcGFyYW1zID0ge307XG5cbiAgICAvLy8vLyBQYXJhbWV0ZXJzXG4gICAgaWYgKHBhcmFtcy51dlNtb290aCA9PT0gdW5kZWZpbmVkKSBwYXJhbXMudXZTbW9vdGggPSBmYWxzZTtcbiAgICBpZiAocGFyYW1zLnByZXNlcnZlRWRnZXMgPT09IHVuZGVmaW5lZCkgcGFyYW1zLnByZXNlcnZlRWRnZXMgPSBmYWxzZTtcblxuICAgIC8vLy8vIEdlb21ldHJpZXNcbiAgICBpZiAoISB2ZXJpZnlHZW9tZXRyeShnZW9tZXRyeSkpIHJldHVybiBnZW9tZXRyeTtcbiAgICBjb25zdCBleGlzdGluZyA9IChnZW9tZXRyeS5pbmRleCAhPT0gbnVsbCkgPyBnZW9tZXRyeS50b05vbkluZGV4ZWQoKSA6IGdlb21ldHJ5LmNsb25lKCk7XG4gICAgY29uc3QgZmxhdCA9IExvb3BTdWJkaXZpc2lvbi5mbGF0KGV4aXN0aW5nKTtcbiAgICBjb25zdCBsb29wID0gbmV3IFRIUkVFLkJ1ZmZlckdlb21ldHJ5KCk7XG5cbiAgICAvLy8vLyBBdHRyaWJ1dGVzXG4gICAgY29uc3QgYXR0cmlidXRlTGlzdCA9IGdhdGhlckF0dHJpYnV0ZXMoZXhpc3RpbmcpO1xuICAgIGNvbnN0IHZlcnRleENvdW50ID0gZXhpc3RpbmcuYXR0cmlidXRlcy5wb3NpdGlvbi5jb3VudDtcbiAgICBjb25zdCBwb3NBdHRyaWJ1dGUgPSBleGlzdGluZy5nZXRBdHRyaWJ1dGUoJ3Bvc2l0aW9uJyk7XG4gICAgY29uc3QgZmxhdFBvc2l0aW9uID0gZmxhdC5nZXRBdHRyaWJ1dGUoJ3Bvc2l0aW9uJyk7XG4gICAgY29uc3QgaGFzaFRvSW5kZXggPSB7fTsgICAgICAgICAgICAgLy8gUG9zaXRpb24gaGFzaCBtYXBwZWQgdG8gaW5kZXggdmFsdWVzIG9mIHNhbWUgcG9zaXRpb25cbiAgICBjb25zdCBleGlzdGluZ05laWdoYm9ycyA9IHt9OyAgICAgICAvLyBQb3NpdGlvbiBoYXNoIG1hcHBlZCB0byBleGlzdGluZyB2ZXJ0ZXggbmVpZ2hib3JzXG4gICAgY29uc3QgZmxhdE9wcG9zaXRlcyA9IHt9OyAgICAgICAgICAgLy8gUG9zaXRpb24gaGFzaCBtYXBwZWQgdG8gbmV3IGVkZ2UgcG9pbnQgb3Bwb3NpdGVzXG4gICAgY29uc3QgZXhpc3RpbmdFZGdlcyA9IHt9O1xuXG4gICAgZnVuY3Rpb24gYWRkTmVpZ2hib3IocG9zSGFzaCwgbmVpZ2hib3JIYXNoLCBpbmRleCkge1xuICAgICAgaWYgKCEgZXhpc3RpbmdOZWlnaGJvcnNbcG9zSGFzaF0pIGV4aXN0aW5nTmVpZ2hib3JzW3Bvc0hhc2hdID0ge307XG4gICAgICBpZiAoISBleGlzdGluZ05laWdoYm9yc1twb3NIYXNoXVtuZWlnaGJvckhhc2hdKSBleGlzdGluZ05laWdoYm9yc1twb3NIYXNoXVtuZWlnaGJvckhhc2hdID0gW107XG4gICAgICBleGlzdGluZ05laWdoYm9yc1twb3NIYXNoXVtuZWlnaGJvckhhc2hdLnB1c2goaW5kZXgpO1xuICAgIH1cblxuICAgIGZ1bmN0aW9uIGFkZE9wcG9zaXRlKHBvc0hhc2gsIGluZGV4KSB7XG4gICAgICBpZiAoISBmbGF0T3Bwb3NpdGVzW3Bvc0hhc2hdKSBmbGF0T3Bwb3NpdGVzW3Bvc0hhc2hdID0gW107XG4gICAgICBmbGF0T3Bwb3NpdGVzW3Bvc0hhc2hdLnB1c2goaW5kZXgpO1xuICAgIH1cblxuICAgIGZ1bmN0aW9uIGFkZEVkZ2VQb2ludChwb3NIYXNoLCBlZGdlSGFzaCkge1xuICAgICAgaWYgKCEgZXhpc3RpbmdFZGdlc1twb3NIYXNoXSkgZXhpc3RpbmdFZGdlc1twb3NIYXNoXSA9IG5ldyBTZXQoKTtcbiAgICAgIGV4aXN0aW5nRWRnZXNbcG9zSGFzaF0uYWRkKGVkZ2VIYXNoKTtcbiAgICB9XG5cbiAgICAvLy8vLyBFeGlzdGluZyBWZXJ0ZXggSGFzaGVzXG4gICAgZm9yIChsZXQgaSA9IDA7IGkgPCB2ZXJ0ZXhDb3VudDsgaSArPSAzKSB7XG4gICAgICBjb25zdCBwb3NIYXNoMCA9IGhhc2hGcm9tVmVjdG9yKF92ZXJ0ZXhbMF0uZnJvbUJ1ZmZlckF0dHJpYnV0ZShwb3NBdHRyaWJ1dGUsIGkgKyAwKSk7XG4gICAgICBjb25zdCBwb3NIYXNoMSA9IGhhc2hGcm9tVmVjdG9yKF92ZXJ0ZXhbMV0uZnJvbUJ1ZmZlckF0dHJpYnV0ZShwb3NBdHRyaWJ1dGUsIGkgKyAxKSk7XG4gICAgICBjb25zdCBwb3NIYXNoMiA9IGhhc2hGcm9tVmVjdG9yKF92ZXJ0ZXhbMl0uZnJvbUJ1ZmZlckF0dHJpYnV0ZShwb3NBdHRyaWJ1dGUsIGkgKyAyKSk7XG5cbiAgICAgIC8vIE5laWdoYm9ycyAob2YgRXhpc3RpbmcgR2VvbWV0cnkpXG4gICAgICBhZGROZWlnaGJvcihwb3NIYXNoMCwgcG9zSGFzaDEsIGkgKyAxKTtcbiAgICAgIGFkZE5laWdoYm9yKHBvc0hhc2gwLCBwb3NIYXNoMiwgaSArIDIpO1xuICAgICAgYWRkTmVpZ2hib3IocG9zSGFzaDEsIHBvc0hhc2gwLCBpICsgMCk7XG4gICAgICBhZGROZWlnaGJvcihwb3NIYXNoMSwgcG9zSGFzaDIsIGkgKyAyKTtcbiAgICAgIGFkZE5laWdoYm9yKHBvc0hhc2gyLCBwb3NIYXNoMCwgaSArIDApO1xuICAgICAgYWRkTmVpZ2hib3IocG9zSGFzaDIsIHBvc0hhc2gxLCBpICsgMSk7XG5cbiAgICAgIC8vIE9wcG9zaXRlcyAob2YgbmV3IEZsYXRTdWJkaXZpZGVkIHZlcnRpY2VzKVxuICAgICAgX3ZlYzB0bzEuY29weShfdmVydGV4WzBdKS5hZGQoX3ZlcnRleFsxXSkuZGl2aWRlU2NhbGFyKDIuMCk7XG4gICAgICBfdmVjMXRvMi5jb3B5KF92ZXJ0ZXhbMV0pLmFkZChfdmVydGV4WzJdKS5kaXZpZGVTY2FsYXIoMi4wKTtcbiAgICAgIF92ZWMydG8wLmNvcHkoX3ZlcnRleFsyXSkuYWRkKF92ZXJ0ZXhbMF0pLmRpdmlkZVNjYWxhcigyLjApO1xuICAgICAgY29uc3QgaGFzaDB0bzEgPSBoYXNoRnJvbVZlY3RvcihfdmVjMHRvMSk7XG4gICAgICBjb25zdCBoYXNoMXRvMiA9IGhhc2hGcm9tVmVjdG9yKF92ZWMxdG8yKTtcbiAgICAgIGNvbnN0IGhhc2gydG8wID0gaGFzaEZyb21WZWN0b3IoX3ZlYzJ0bzApO1xuICAgICAgYWRkT3Bwb3NpdGUoaGFzaDB0bzEsIGkgKyAyKTtcbiAgICAgIGFkZE9wcG9zaXRlKGhhc2gxdG8yLCBpICsgMCk7XG4gICAgICBhZGRPcHBvc2l0ZShoYXNoMnRvMCwgaSArIDEpO1xuXG4gICAgICAvLyBUcmFjayBFZGdlcyBmb3IgJ2VkZ2VQcmVzZXJ2ZSdcbiAgICAgIGFkZEVkZ2VQb2ludChwb3NIYXNoMCwgaGFzaDB0bzEpO1xuICAgICAgYWRkRWRnZVBvaW50KHBvc0hhc2gwLCBoYXNoMnRvMCk7XG4gICAgICBhZGRFZGdlUG9pbnQocG9zSGFzaDEsIGhhc2gwdG8xKTtcbiAgICAgIGFkZEVkZ2VQb2ludChwb3NIYXNoMSwgaGFzaDF0bzIpO1xuICAgICAgYWRkRWRnZVBvaW50KHBvc0hhc2gyLCBoYXNoMXRvMik7XG4gICAgICBhZGRFZGdlUG9pbnQocG9zSGFzaDIsIGhhc2gydG8wKTtcbiAgICB9XG5cbiAgICAvLy8vLyBGbGF0IFBvc2l0aW9uIHRvIEluZGV4IE1hcFxuICAgIGZvciAobGV0IGkgPSAwOyBpIDwgZmxhdC5hdHRyaWJ1dGVzLnBvc2l0aW9uLmNvdW50OyBpKyspIHtcbiAgICAgIGNvbnN0IHBvc0hhc2ggPSBoYXNoRnJvbVZlY3RvcihfdGVtcC5mcm9tQnVmZmVyQXR0cmlidXRlKGZsYXRQb3NpdGlvbiwgaSkpO1xuICAgICAgaWYgKCEgaGFzaFRvSW5kZXhbcG9zSGFzaF0pIGhhc2hUb0luZGV4W3Bvc0hhc2hdID0gW107XG4gICAgICBoYXNoVG9JbmRleFtwb3NIYXNoXS5wdXNoKGkpO1xuICAgIH1cblxuICAgIC8vLy8vIEJ1aWxkIEdlb21ldHJ5LCBTZXQgQXR0cmlidXRlc1xuICAgIGF0dHJpYnV0ZUxpc3QuZm9yRWFjaCgoYXR0cmlidXRlTmFtZSkgPT4ge1xuICAgICAgY29uc3QgZXhpc3RpbmdBdHRyaWJ1dGUgPSBleGlzdGluZy5nZXRBdHRyaWJ1dGUoYXR0cmlidXRlTmFtZSk7XG4gICAgICBjb25zdCBmbGF0QXR0cmlidXRlID0gZmxhdC5nZXRBdHRyaWJ1dGUoYXR0cmlidXRlTmFtZSk7XG4gICAgICBpZiAoZXhpc3RpbmdBdHRyaWJ1dGUgPT09IHVuZGVmaW5lZCB8fCBmbGF0QXR0cmlidXRlID09PSB1bmRlZmluZWQpIHJldHVybjtcblxuICAgICAgY29uc3QgZmxvYXRBcnJheSA9IHN1YmRpdmlkZUF0dHJpYnV0ZShhdHRyaWJ1dGVOYW1lLCBleGlzdGluZ0F0dHJpYnV0ZSwgZmxhdEF0dHJpYnV0ZSk7XG4gICAgICBsb29wLnNldEF0dHJpYnV0ZShhdHRyaWJ1dGVOYW1lLCBuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKGZsb2F0QXJyYXksIGZsYXRBdHRyaWJ1dGUuaXRlbVNpemUpKTtcbiAgICB9KTtcblxuICAgIC8vLy8vIE1vcnBoIEF0dHJpYnV0ZXNcbiAgICBjb25zdCBtb3JwaEF0dHJpYnV0ZXMgPSBleGlzdGluZy5tb3JwaEF0dHJpYnV0ZXM7XG4gICAgZm9yIChjb25zdCBhdHRyaWJ1dGVOYW1lIGluIG1vcnBoQXR0cmlidXRlcykge1xuICAgICAgY29uc3QgYXJyYXkgPSBbXTtcbiAgICAgIGNvbnN0IG1vcnBoQXR0cmlidXRlID0gbW9ycGhBdHRyaWJ1dGVzW2F0dHJpYnV0ZU5hbWVdO1xuXG4gICAgICAvLyBQcm9jZXNzIEFycmF5IG9mIEZsb2F0MzJCdWZmZXJBdHRyaWJ1dGVzXG4gICAgICBmb3IgKGxldCBpID0gMCwgbCA9IG1vcnBoQXR0cmlidXRlLmxlbmd0aDsgaSA8IGw7IGkrKykge1xuICAgICAgICBpZiAobW9ycGhBdHRyaWJ1dGVbaV0uY291bnQgIT09IHZlcnRleENvdW50KSBjb250aW51ZTtcbiAgICAgICAgY29uc3QgZXhpc3RpbmdBdHRyaWJ1dGUgPSBtb3JwaEF0dHJpYnV0ZVtpXTtcbiAgICAgICAgY29uc3QgZmxhdEF0dHJpYnV0ZSA9IExvb3BTdWJkaXZpc2lvbi5mbGF0QXR0cmlidXRlKG1vcnBoQXR0cmlidXRlW2ldLCBtb3JwaEF0dHJpYnV0ZVtpXS5jb3VudClcblxuICAgICAgICBjb25zdCBmbG9hdEFycmF5ID0gc3ViZGl2aWRlQXR0cmlidXRlKGF0dHJpYnV0ZU5hbWUsIGV4aXN0aW5nQXR0cmlidXRlLCBmbGF0QXR0cmlidXRlKTtcbiAgICAgICAgYXJyYXkucHVzaChuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKGZsb2F0QXJyYXksIGZsYXRBdHRyaWJ1dGUuaXRlbVNpemUpKTtcbiAgICAgIH1cbiAgICAgIGxvb3AubW9ycGhBdHRyaWJ1dGVzW2F0dHJpYnV0ZU5hbWVdID0gYXJyYXk7XG4gICAgfVxuICAgIGxvb3AubW9ycGhUYXJnZXRzUmVsYXRpdmUgPSBleGlzdGluZy5tb3JwaFRhcmdldHNSZWxhdGl2ZTtcblxuICAgIC8vLy8vIENsZWFuIFVwXG4gICAgZmxhdC5kaXNwb3NlKCk7XG4gICAgZXhpc3RpbmcuZGlzcG9zZSgpO1xuICAgIHJldHVybiBsb29wO1xuXG4gICAgLy8vLy8vLy8vL1xuXG4gICAgLy8gTG9vcCBTdWJkaXZpZGUgRnVuY3Rpb25cbiAgICBmdW5jdGlvbiBzdWJkaXZpZGVBdHRyaWJ1dGUoYXR0cmlidXRlTmFtZSwgZXhpc3RpbmdBdHRyaWJ1dGUsIGZsYXRBdHRyaWJ1dGUpIHtcbiAgICAgIGNvbnN0IGFycmF5TGVuZ3RoID0gKGZsYXQuYXR0cmlidXRlcy5wb3NpdGlvbi5jb3VudCAqIGZsYXRBdHRyaWJ1dGUuaXRlbVNpemUpO1xuICAgICAgY29uc3QgZmxvYXRBcnJheSA9IG5ldyBleGlzdGluZ0F0dHJpYnV0ZS5hcnJheS5jb25zdHJ1Y3RvcihhcnJheUxlbmd0aCk7XG5cbiAgICAgIC8vIFByb2Nlc3MgVHJpYW5nbGVzXG4gICAgICBsZXQgaW5kZXggPSAwO1xuICAgICAgZm9yIChsZXQgaSA9IDA7IGkgPCBmbGF0LmF0dHJpYnV0ZXMucG9zaXRpb24uY291bnQ7IGkgKz0gMykge1xuXG4gICAgICAgIC8vIFByb2Nlc3MgVHJpYW5nbGUgUG9pbnRzXG4gICAgICAgIGZvciAobGV0IHYgPSAwOyB2IDwgMzsgdisrKSB7XG5cbiAgICAgICAgICBpZiAoYXR0cmlidXRlTmFtZSA9PT0gJ3V2JyAmJiAhIHBhcmFtcy51dlNtb290aCkge1xuXG4gICAgICAgICAgICBfdmVydGV4W3ZdLmZyb21CdWZmZXJBdHRyaWJ1dGUoZmxhdEF0dHJpYnV0ZSwgaSArIHYpO1xuXG4gICAgICAgICAgfSBlbHNlIGlmIChhdHRyaWJ1dGVOYW1lID09PSAnbm9ybWFsJykgeyAvLyAmJiBwYXJhbXMubm9ybWFsU21vb3RoKSB7XG5cbiAgICAgICAgICAgIF9wb3NpdGlvblt2XS5mcm9tQnVmZmVyQXR0cmlidXRlKGZsYXRQb3NpdGlvbiwgaSArIHYpO1xuICAgICAgICAgICAgY29uc3QgcG9zaXRpb25IYXNoID0gaGFzaEZyb21WZWN0b3IoX3Bvc2l0aW9uW3ZdKTtcbiAgICAgICAgICAgIGNvbnN0IHBvc2l0aW9ucyA9IGhhc2hUb0luZGV4W3Bvc2l0aW9uSGFzaF07XG5cbiAgICAgICAgICAgIGNvbnN0IGsgPSBPYmplY3Qua2V5cyhwb3NpdGlvbnMpLmxlbmd0aDtcbiAgICAgICAgICAgIGNvbnN0IGJldGEgPSAwLjc1IC8gaztcbiAgICAgICAgICAgIGNvbnN0IHN0YXJ0V2VpZ2h0ID0gMS4wIC0gKGJldGEgKiBrKTtcblxuICAgICAgICAgICAgX3ZlcnRleFt2XS5mcm9tQnVmZmVyQXR0cmlidXRlKGZsYXRBdHRyaWJ1dGUsIGkgKyB2KTtcbiAgICAgICAgICAgIF92ZXJ0ZXhbdl0ubXVsdGlwbHlTY2FsYXIoc3RhcnRXZWlnaHQpO1xuXG4gICAgICAgICAgICBwb3NpdGlvbnMuZm9yRWFjaChwb3NpdGlvbkluZGV4ID0+IHtcbiAgICAgICAgICAgICAgX2F2ZXJhZ2UuZnJvbUJ1ZmZlckF0dHJpYnV0ZShmbGF0QXR0cmlidXRlLCBwb3NpdGlvbkluZGV4KTtcbiAgICAgICAgICAgICAgX2F2ZXJhZ2UubXVsdGlwbHlTY2FsYXIoYmV0YSk7XG4gICAgICAgICAgICAgIF92ZXJ0ZXhbdl0uYWRkKF9hdmVyYWdlKTtcbiAgICAgICAgICAgIH0pO1xuXG5cbiAgICAgICAgICB9IGVsc2UgeyAvLyAncG9zaXRpb24nLCAnY29sb3InLCBldGMuLi5cblxuICAgICAgICAgICAgX3ZlcnRleFt2XS5mcm9tQnVmZmVyQXR0cmlidXRlKGZsYXRBdHRyaWJ1dGUsIGkgKyB2KTtcbiAgICAgICAgICAgIF9wb3NpdGlvblt2XS5mcm9tQnVmZmVyQXR0cmlidXRlKGZsYXRQb3NpdGlvbiwgaSArIHYpO1xuXG4gICAgICAgICAgICBjb25zdCBwb3NpdGlvbkhhc2ggPSBoYXNoRnJvbVZlY3RvcihfcG9zaXRpb25bdl0pO1xuICAgICAgICAgICAgY29uc3QgbmVpZ2hib3JzID0gZXhpc3RpbmdOZWlnaGJvcnNbcG9zaXRpb25IYXNoXTtcbiAgICAgICAgICAgIGNvbnN0IG9wcG9zaXRlcyA9IGZsYXRPcHBvc2l0ZXNbcG9zaXRpb25IYXNoXTtcblxuICAgICAgICAgICAgLy8vLy8gQWRqdXN0IFNvdXJjZSBWZXJ0ZXhcbiAgICAgICAgICAgIGlmIChuZWlnaGJvcnMpIHtcblxuICAgICAgICAgICAgICAvLyBDaGVjayBFZGdlcyBoYXZlIGV2ZW4gT3Bwb3NpdGUgUG9pbnRzXG4gICAgICAgICAgICAgIGlmIChwYXJhbXMucHJlc2VydmVFZGdlcykge1xuICAgICAgICAgICAgICAgIGNvbnN0IGVkZ2VTZXQgPSBleGlzdGluZ0VkZ2VzW3Bvc2l0aW9uSGFzaF07XG4gICAgICAgICAgICAgICAgbGV0IGhhc1BhaXIgPSB0cnVlO1xuICAgICAgICAgICAgICAgIGZvciAoY29uc3QgZWRnZUhhc2ggb2YgZWRnZVNldCkge1xuICAgICAgICAgICAgICAgICAgaWYgKGZsYXRPcHBvc2l0ZXNbZWRnZUhhc2hdLmxlbmd0aCAlIDIgIT09IDApIGhhc1BhaXIgPSBmYWxzZTtcbiAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICAgICAgaWYgKCEgaGFzUGFpcikgY29udGludWU7XG4gICAgICAgICAgICAgIH1cblxuICAgICAgICAgICAgICAvLyBOdW1iZXIgb2YgTmVpZ2hib3JzXG4gICAgICAgICAgICAgIGNvbnN0IGsgPSBPYmplY3Qua2V5cyhuZWlnaGJvcnMpLmxlbmd0aDtcblxuICAgICAgICAgICAgICAvLy8vLyBMb29wJ3MgRm9ybXVsYVxuICAgICAgICAgICAgICBjb25zdCBiZXRhID0gMSAvIGsgKiAoKDUvOCkgLSBNYXRoLnBvdygoMy84KSArICgxLzQpICogTWF0aC5jb3MoMiAqIE1hdGguUEkgLyBrKSwgMikpO1xuXG4gICAgICAgICAgICAgIC8vLy8vIFdhcnJlbidzIEZvcm11bGFcbiAgICAgICAgICAgICAgLy8gY29uc3QgYmV0YSA9IChrID4gMykgPyAzIC8gKDggKiBrKSA6ICgoayA9PT0gMykgPyAzIC8gMTYgOiAwKTtcblxuICAgICAgICAgICAgICAvLy8vLyBTdGV2aW56JyBGb3JtdWxhXG4gICAgICAgICAgICAgIC8vIGNvbnN0IGJldGEgPSAwLjUgLyBrO1xuXG4gICAgICAgICAgICAgIC8vLy8vIEF2ZXJhZ2Ugd2l0aCBOZWlnaGJvcnNcbiAgICAgICAgICAgICAgY29uc3Qgc3RhcnRXZWlnaHQgPSAxLjAgLSAoYmV0YSAqIGspO1xuICAgICAgICAgICAgICBfdmVydGV4W3ZdLm11bHRpcGx5U2NhbGFyKHN0YXJ0V2VpZ2h0KTtcblxuICAgICAgICAgICAgICBmb3IgKGxldCBuZWlnaGJvckhhc2ggaW4gbmVpZ2hib3JzKSB7XG4gICAgICAgICAgICAgICAgY29uc3QgbmVpZ2hib3JJbmRpY2VzID0gbmVpZ2hib3JzW25laWdoYm9ySGFzaF07XG5cbiAgICAgICAgICAgICAgICBfYXZlcmFnZS5zZXQoMCwgMCwgMCk7XG4gICAgICAgICAgICAgICAgZm9yIChsZXQgaiA9IDA7IGogPCBuZWlnaGJvckluZGljZXMubGVuZ3RoOyBqKyspIHtcbiAgICAgICAgICAgICAgICAgIF9hdmVyYWdlLmFkZChfdGVtcC5mcm9tQnVmZmVyQXR0cmlidXRlKGV4aXN0aW5nQXR0cmlidXRlLCBuZWlnaGJvckluZGljZXNbal0pKTtcbiAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICAgICAgX2F2ZXJhZ2UuZGl2aWRlU2NhbGFyKG5laWdoYm9ySW5kaWNlcy5sZW5ndGgpO1xuXG4gICAgICAgICAgICAgICAgX2F2ZXJhZ2UubXVsdGlwbHlTY2FsYXIoYmV0YSk7XG4gICAgICAgICAgICAgICAgX3ZlcnRleFt2XS5hZGQoX2F2ZXJhZ2UpO1xuICAgICAgICAgICAgICB9XG5cbiAgICAgICAgICAgICAgLy8vLy8gTmV3bHkgQWRkZWQgRWRnZSBWZXJ0ZXhcbiAgICAgICAgICAgIH0gZWxzZSBpZiAob3Bwb3NpdGVzICYmIG9wcG9zaXRlcy5sZW5ndGggPT09IDIpIHtcbiAgICAgICAgICAgICAgY29uc3QgayA9IG9wcG9zaXRlcy5sZW5ndGg7XG4gICAgICAgICAgICAgIGNvbnN0IGJldGEgPSAwLjEyNTsgLyogMS84ICovXG4gICAgICAgICAgICAgIGNvbnN0IHN0YXJ0V2VpZ2h0ID0gMS4wIC0gKGJldGEgKiBrKTtcbiAgICAgICAgICAgICAgX3ZlcnRleFt2XS5tdWx0aXBseVNjYWxhcihzdGFydFdlaWdodCk7XG5cbiAgICAgICAgICAgICAgb3Bwb3NpdGVzLmZvckVhY2gob3Bwb3NpdGVJbmRleCA9PiB7XG4gICAgICAgICAgICAgICAgX2F2ZXJhZ2UuZnJvbUJ1ZmZlckF0dHJpYnV0ZShleGlzdGluZ0F0dHJpYnV0ZSwgb3Bwb3NpdGVJbmRleCk7XG4gICAgICAgICAgICAgICAgX2F2ZXJhZ2UubXVsdGlwbHlTY2FsYXIoYmV0YSk7XG4gICAgICAgICAgICAgICAgX3ZlcnRleFt2XS5hZGQoX2F2ZXJhZ2UpO1xuICAgICAgICAgICAgICB9KTtcbiAgICAgICAgICAgIH1cbiAgICAgICAgICB9XG4gICAgICAgIH1cblxuICAgICAgICAvLyBBZGQgTmV3IFRyaWFuZ2xlIFBvc2l0aW9uXG4gICAgICAgIHNldFRyaWFuZ2xlKGZsb2F0QXJyYXksIGluZGV4LCBmbGF0QXR0cmlidXRlLml0ZW1TaXplLCBfdmVydGV4WzBdLCBfdmVydGV4WzFdLCBfdmVydGV4WzJdKTtcbiAgICAgICAgaW5kZXggKz0gKGZsYXRBdHRyaWJ1dGUuaXRlbVNpemUgKiAzKTtcbiAgICAgIH1cblxuICAgICAgcmV0dXJuIGZsb2F0QXJyYXk7XG4gICAgfVxuXG4gIH1cblxufVxuXG4vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vXG4vLy8vLyAgIExvY2FsIEZ1bmN0aW9ucywgSGFzaFxuLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vL1xuXG5jb25zdCBfcG9zaXRpb25TaGlmdCA9IE1hdGgucG93KDEwLCBQT1NJVElPTl9ERUNJTUFMUyk7XG5cbi8qKiBDb21wYXJlcyB0d28gbnVtYmVycyB0byBzZWUgaWYgdGhleSdyZSBhbG1vc3QgdGhlIHNhbWUgKi9cbmZ1bmN0aW9uIGZ1enp5KGEsIGIsIHRvbGVyYW5jZSA9IDAuMDAwMDEpIHtcbiAgcmV0dXJuICgoYSA8IChiICsgdG9sZXJhbmNlKSkgJiYgKGEgPiAoYiAtIHRvbGVyYW5jZSkpKTtcbn1cblxuLyoqIEdlbmVyYXRlcyBoYXNoIHN0cm9uZyBmcm9tIE51bWJlciAqL1xuZnVuY3Rpb24gaGFzaEZyb21OdW1iZXIobnVtLCBzaGlmdCA9IF9wb3NpdGlvblNoaWZ0KSB7XG4gIGxldCByb3VuZGVkTnVtYmVyID0gcm91bmQobnVtICogc2hpZnQpO1xuICBpZiAocm91bmRlZE51bWJlciA9PSAwKSByb3VuZGVkTnVtYmVyID0gMDsgLyogcHJldmVudCAtMCAoc2lnbmVkIDAgY2FuIGVmZmVjdCBNYXRoLmF0YW4yKCksIGV0Yy4pICovXG4gIHJldHVybiBgJHtyb3VuZGVkTnVtYmVyfWA7XG59XG5cbi8qKiBHZW5lcmF0ZXMgaGFzaCBzdHJvbmcgZnJvbSBWZWN0b3IzICovXG5mdW5jdGlvbiBoYXNoRnJvbVZlY3Rvcih2ZWN0b3IsIHNoaWZ0ID0gX3Bvc2l0aW9uU2hpZnQpIHtcbiAgcmV0dXJuIGAke2hhc2hGcm9tTnVtYmVyKHZlY3Rvci54LCBzaGlmdCl9LCR7aGFzaEZyb21OdW1iZXIodmVjdG9yLnksIHNoaWZ0KX0sJHtoYXNoRnJvbU51bWJlcih2ZWN0b3Iueiwgc2hpZnQpfWA7XG59XG5cbmZ1bmN0aW9uIHJvdW5kKHgpIHtcbiAgcmV0dXJuICh4ICsgKCh4ID4gMCkgPyAwLjUgOiAtMC41KSkgPDwgMDtcbn1cblxuLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vL1xuLy8vLy8gICBMb2NhbCBGdW5jdGlvbnMsIEdlb21ldHJ5XG4vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vXG5cbmZ1bmN0aW9uIGNhbGNOb3JtYWwodGFyZ2V0LCB2ZWMxLCB2ZWMyLCB2ZWMzKSB7XG4gIF90ZW1wLnN1YlZlY3RvcnModmVjMSwgdmVjMik7XG4gIHRhcmdldC5zdWJWZWN0b3JzKHZlYzIsIHZlYzMpO1xuICB0YXJnZXQuY3Jvc3MoX3RlbXApLm5vcm1hbGl6ZSgpO1xufVxuXG5mdW5jdGlvbiBnYXRoZXJBdHRyaWJ1dGVzKGdlb21ldHJ5KSB7XG4gIGNvbnN0IGRlc2lyZWQgPSBbICdwb3NpdGlvbicsICdub3JtYWwnLCAndXYnIF07XG4gIGNvbnN0IGNvbnRhaW5zID0gT2JqZWN0LmtleXMoZ2VvbWV0cnkuYXR0cmlidXRlcyk7XG4gIGNvbnN0IGF0dHJpYnV0ZUxpc3QgPSBBcnJheS5mcm9tKG5ldyBTZXQoZGVzaXJlZC5jb25jYXQoY29udGFpbnMpKSk7XG4gIHJldHVybiBhdHRyaWJ1dGVMaXN0O1xufVxuXG5mdW5jdGlvbiBzZXRUcmlhbmdsZShwb3NpdGlvbnMsIGluZGV4LCBzdGVwLCB2ZWMwLCB2ZWMxLCB2ZWMyKSB7XG4gIGlmIChzdGVwID49IDEpIHtcbiAgICBwb3NpdGlvbnNbaW5kZXggKyAwICsgKHN0ZXAgKiAwKV0gPSB2ZWMwLng7XG4gICAgcG9zaXRpb25zW2luZGV4ICsgMCArIChzdGVwICogMSldID0gdmVjMS54O1xuICAgIHBvc2l0aW9uc1tpbmRleCArIDAgKyAoc3RlcCAqIDIpXSA9IHZlYzIueDtcbiAgfVxuICBpZiAoc3RlcCA+PSAyKSB7XG4gICAgcG9zaXRpb25zW2luZGV4ICsgMSArIChzdGVwICogMCldID0gdmVjMC55O1xuICAgIHBvc2l0aW9uc1tpbmRleCArIDEgKyAoc3RlcCAqIDEpXSA9IHZlYzEueTtcbiAgICBwb3NpdGlvbnNbaW5kZXggKyAxICsgKHN0ZXAgKiAyKV0gPSB2ZWMyLnk7XG4gIH1cbiAgaWYgKHN0ZXAgPj0gMykge1xuICAgIHBvc2l0aW9uc1tpbmRleCArIDIgKyAoc3RlcCAqIDApXSA9IHZlYzAuejtcbiAgICBwb3NpdGlvbnNbaW5kZXggKyAyICsgKHN0ZXAgKiAxKV0gPSB2ZWMxLno7XG4gICAgcG9zaXRpb25zW2luZGV4ICsgMiArIChzdGVwICogMildID0gdmVjMi56O1xuICB9XG4gIGlmIChzdGVwID49IDQpIHtcbiAgICBwb3NpdGlvbnNbaW5kZXggKyAzICsgKHN0ZXAgKiAwKV0gPSB2ZWMwLnc7XG4gICAgcG9zaXRpb25zW2luZGV4ICsgMyArIChzdGVwICogMSldID0gdmVjMS53O1xuICAgIHBvc2l0aW9uc1tpbmRleCArIDMgKyAoc3RlcCAqIDIpXSA9IHZlYzIudztcbiAgfVxufVxuXG5mdW5jdGlvbiB2ZXJpZnlHZW9tZXRyeShnZW9tZXRyeSkge1xuICBpZiAoZ2VvbWV0cnkgPT09IHVuZGVmaW5lZCkge1xuICAgIGNvbnNvbGUud2FybihgTG9vcFN1YmRpdmlzaW9uOiBHZW9tZXRyeSBwcm92aWRlZCBpcyB1bmRlZmluZWRgKTtcbiAgICByZXR1cm4gZmFsc2U7XG4gIH1cblxuICBpZiAoISBnZW9tZXRyeS5pc0J1ZmZlckdlb21ldHJ5KSB7XG4gICAgY29uc29sZS53YXJuKGBMb29wU3ViZGl2aXNpb246IEdlb21ldHJ5IHByb3ZpZGVkIGlzIG5vdCAnQnVmZmVyR2VvbWV0cnknIHR5cGVgKTtcbiAgICByZXR1cm4gZmFsc2U7XG4gIH1cblxuICBpZiAoZ2VvbWV0cnkuYXR0cmlidXRlcy5wb3NpdGlvbiA9PT0gdW5kZWZpbmVkKSB7XG4gICAgY29uc29sZS53YXJuKGBMb29wU3ViZGl2aXNpb246IEdlb21ldHJ5IHByb3ZpZGVkIG1pc3NpbmcgcmVxdWlyZWQgJ3Bvc2l0aW9uJyBhdHRyaWJ1dGVgKTtcbiAgICByZXR1cm4gZmFsc2U7XG4gIH1cblxuICBpZiAoZ2VvbWV0cnkuYXR0cmlidXRlcy5ub3JtYWwgPT09IHVuZGVmaW5lZCkge1xuICAgIGdlb21ldHJ5LmNvbXB1dGVWZXJ0ZXhOb3JtYWxzKCk7XG4gIH1cbiAgcmV0dXJuIHRydWU7XG59XG4iXSwibWFwcGluZ3MiOiJBQUFBO0FBQUE7QUFBQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTsiLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///./src/LoopSubdivision.mjs\n");
+
+/***/ }),
+
+/***/ "./src/glow.mjs":
+/*!**********************!*\
+  !*** ./src/glow.mjs ***!
+  \**********************/
+/*! no exports provided */
+/***/ (function(__webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _LoopSubdivision_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./LoopSubdivision.mjs */ \"./src/LoopSubdivision.mjs\");\n\n\nAFRAME.registerComponent('glow', {\n  schema: {\n    enabled: {default: true},\n    c: {type: 'number', default: 1 },\n    p: {type: 'number', default: 1.4 },\n    color: {type: 'color', default: '#FFFF00'},\n    scale: {type: 'number', default: 2 },\n    side: {type: 'string', default: \"front\" },\n  },\n  init: function () {\n\t\tconst that = this;\n\t\tconst run = function () {\n\t\t\tconst camera = document.querySelector('[camera]').object3D;\n\t\t\tthat.camera = camera;\n\n\t\t\tlet sideRender = THREE.FrontSide;\n\t\t\tif (that.data.side === \"back\") {\n\t\t\t\tsideRender = THREE.BackSide;\n\t\t\t}\n\n\t\t\t// Setup shader\n\t\t\tthat.glowMaterial = new THREE.ShaderMaterial({\n\t\t\t\tuniforms: {\n\t\t\t\t\t\"c\": {type: \"f\", value: that.data.c},\n\t\t\t\t\t\"p\": {type: \"f\", value: that.data.p},\n\t\t\t\t\tglowColor: {type: \"c\", value: new THREE.Color(that.data.color)},\n\t\t\t\t\tviewVector: {type: \"v3\", value: camera.position}\n\t\t\t\t},\n\t\t\t\tvertexShader: THREE.__GlowShader.vertexShader,\n\t\t\t\tfragmentShader: THREE.__GlowShader.fragmentShader,\n\t\t\t\tside: sideRender,\n\t\t\t\tblending: THREE.AdditiveBlending,\n\t\t\t\ttransparent: true\n\t\t\t});\n\n\t\t\tconst geometry = _LoopSubdivision_mjs__WEBPACK_IMPORTED_MODULE_0__[\"LoopSubdivision\"].modify(that.el.object3DMap.mesh.geometry, 2, {});\n\n\t\t\t// ISSUE for OBJs: >> line below\n\t\t\t// let object = that.el.object3DMap.mesh.geometry.clone();\n\t\t\t// object = new THREE.Geometry().fromBufferGeometry(object);\n\t\t\t// const modifier = new THREE.BufferSubdivisionModifier(2);\n\t\t\t// object = modifier.modify(object);\n\n\t\t\tthat.glowMesh = new THREE.Mesh(geometry, that.glowMaterial);\n\t\t\tthat.el.object3D.add(that.glowMesh);\n\n\t\t\tif (!that.data.enabled) {\n\t\t\t\tthat.glowMesh.visible = false;\n\t\t\t}\n\t\t};\n\n\t\t// Make sure the entity has a mesh, otherwise wait for the 3D model to be loaded..\n    function waitForEntityLoad() {\n      if (that.el.object3DMap.mesh) { return run() }\n      that.el.addEventListener('model-loaded', run);\n    }\n\n    // Make sure the scene has been loaded..\n    if (this.el.sceneEl.hasLoaded) { return waitForEntityLoad(); }\n    this.el.sceneEl.addEventListener('loaded', waitForEntityLoad);\n  },\n  update: function () {\n    if (this.data.enabled) {\n      if (this.glowMesh) {\n        this.glowMesh.visible = true;\n\n        if (this.data.c < 0) { this.data.c = 0; }\n        if (this.data.c > 1) { this.data.c = 1; }\n        if (this.data.p < 0) { this.data.p = 0; }\n        if (this.data.p > 6) { this.data.p = 6; }\n\n        this.glowMesh.material.uniforms[ \"c\" ].value = this.data.c;\n        this.glowMesh.material.uniforms[ \"p\" ].value = this.data.p;\n        this.glowMesh.material.uniforms.glowColor.value.setHex( this.data.color.replace(\"#\", \"0x\"));\n\n\t\t\t\tlet sideRender = THREE.FrontSide;\n\t\t\t\tif (this.data.side === \"back\") {\n          sideRender = THREE.BackSide;\n        }\n        this.glowMesh.material.side = sideRender;\n      }\n    } else if (this.glowMesh) {\n      this.glowMesh.visible = false;\n    }\n  },\n  tick: function () {\n    if (this.glowMesh) {\n      this.glowMesh.rotation.set(this.el.object3D.rotation.x, this.el.object3D.rotation.y, this.el.object3D.rotation.z);\n      this.glowMesh.scale.set(this.el.object3D.scale.x*this.data.scale, this.el.object3D.scale.y*this.data.scale, this.el.object3D.scale.z*this.data.scale);\n      if (!this.camera) { return; }\n      this.glowMesh.material.uniforms.viewVector.value =\n    \t\tnew THREE.Vector3().subVectors( this.camera.position, this.glowMesh.position );\n    }\n  },\n  remove: function () {\n    if (!this.glowMesh) { return; }\n\t\tconst scene = this.el.sceneEl.object3D;\n\t\tscene.remove( this.glowMesh );\n    this.glowMesh = null;\n    this.glowMaterial = null;\n  },\n  pause: function () {},\n  play: function () {}\n});\n\n\nTHREE.__GlowShader = {\n\n\tvertexShader: [\n\n    \"uniform vec3 viewVector;\",\n    \"uniform float c;\",\n    \"uniform float p;\",\n    \"varying float intensity;\",\n    \"void main() \",\n    \"{\",\n      \"vec3 vNormal = normalize( normalMatrix * normal );\",\n    \t\"vec3 vNormel = normalize( normalMatrix * viewVector );\",\n    \t\"intensity = pow( c - dot(vNormal, vNormel), p );\",\n\n      \"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\",\n    \"}\"\n\n\t].join(\"\\n\"),\n\n\tfragmentShader: [\n\n\t\t\"uniform vec3 glowColor;\",\n    \"varying float intensity;\",\n    \"void main() \",\n    \"{\",\n    \t\"vec3 glow = glowColor * intensity;\",\n      \"gl_FragColor = vec4( glow, 1.0 );\",\n    \"}\"\n\n\t].join(\"\\n\")\n\n};\n\n\n\n\n/*\n * @author zz85 / http://twitter.com/blurspline / http://www.lab4games.net/zz85/blog\n * @author Matthew Adams / http://www.centerionware.com - added UV support and rewrote to use buffergeometry.\n *\n * Subdivision Geometry Modifier using Loop Subdivision Scheme for Geometry / BufferGeometry\n *\n * References:\n *\thttp://graphics.stanford.edu/~mdfisher/subdivision.html\n *\thttp://www.holmes3d.net/graphics/subdivision/\n *\thttp://www.cs.rutgers.edu/~decarlo/readings/subdiv-sg00c.pdf\n *\n * Known Issues:\n *\t- currently doesn't handle \"Sharp Edges\"\n *\t- no checks to prevent breaking when uv's don't exist.\n *\t- vertex colors are unsupported.\n *\t**DDS Images when using corrected uv's passed to subdivision modifier will have their uv's flipy'd within the correct uv set\n *\t**Either flipy the DDS image, or use shaders. Don't try correcting the uv's before passing into subdiv (eg: v=1-v).\n *\n * @input THREE.Geometry, or index'd THREE.BufferGeometry with faceUV's (Not vertex uv's)\n * @output non-indexed vertex points, uv's, normals.\n *\n * The TypedArrayHelper class is designed to assist managing typed arrays, and to allow the removal of all 'new Vector3, new Face3, new Vector2'.\n *\n * It will automatically resize them if trying to push a new element to an array that isn't long enough\n * It provides 'registers' that the units can be mapped to. This allows a small set of objects\n * (ex: vector3's, face3's, vector2's) to be allocated then used, to eliminate any need to rewrite all\n * the features those classes offer while not requiring some_huge_number to be allocated.\n * It should be moved into it's own file honestly, then included before the BufferSubdivisionModifier - maybe in three's core?\n *\n */\n\nvar TypedArrayHelper = function( size, registers, register_type, array_type, unit_size, accessors ) {\n\n\tthis.array_type = array_type;\n\tthis.register_type = register_type;\n\tthis.unit_size = unit_size;\n\tthis.accessors = accessors;\n\tthis.buffer = new array_type( size * unit_size );\n\tthis.register = [];\n\tthis.length = 0;\n\tthis.real_length = size;\n\tthis.available_registers = registers;\n\n\tfor ( var i = 0; i < registers; i++ ) {\n\n\t\tthis.register.push( new register_type() );\n\n\t}\n\n};\n\nTypedArrayHelper.prototype = {\n\n\tconstructor: TypedArrayHelper,\n\n\tindex_to_register: function( index, register, isLoop ) {\n\n\t\tvar base = index * this.unit_size;\n\n\t\tif ( register >= this.available_registers ) {\n\n\t\t\tthrow new Error( 'THREE.BufferSubdivisionModifier: Not enough registers in TypedArrayHelper.' );\n\n\t\t}\n\n\t\tif ( index > this.length ) {\n\n\t\t\tthrow new Error( 'THREE.BufferSubdivisionModifier: Index is out of range in TypedArrayHelper.' );\n\n\t\t}\n\n\t\tfor ( var i = 0; i < this.unit_size; i++ ) {\n\n\t\t\t( this.register[ register ] )[ this.accessors[ i ] ] = this.buffer[ base + i ];\n\n\t\t}\n\n\t},\n\n\tresize: function( new_size ) {\n\n\t\tif ( new_size === 0 ) {\n\n\t\t\tnew_size = 8;\n\n\t\t}\n\n\t\tif ( new_size < this.length ) {\n\n\t\t\tthis.buffer = this.buffer.subarray( 0, this.length * this.unit_size );\n\n\t\t} else {\n\n\t\t\tvar nBuffer;\n\n\t\t\tif ( this.buffer.length < new_size * this.unit_size ) {\n\n\t\t\t\tnBuffer = new this.array_type( new_size * this.unit_size );\n\t\t\t\tnBuffer.set( this.buffer );\n\t\t\t\tthis.buffer = nBuffer;\n\t\t\t\tthis.real_length = new_size;\n\n\t\t\t} else {\n\n\t\t\t\tnBuffer = new this.array_type( new_size * this.unit_size );\n\t\t\t\tnBuffer.set( this.buffer.subarray( 0, this.length * this.unit_size ) );\n\t\t\t\tthis.buffer = nBuffer;\n\t\t\t\tthis.real_length = new_size;\n\n\t\t\t}\n\n\t\t}\n\n\t},\n\n\tfrom_existing: function( oldArray ) {\n\n\t\tvar new_size = oldArray.length;\n\t\tthis.buffer = new this.array_type( new_size );\n\t\tthis.buffer.set( oldArray );\n\t\tthis.length = oldArray.length / this.unit_size;\n\t\tthis.real_length = this.length;\n\n\t},\n\n\tpush_element: function( vector ) {\n\n\t\tif ( this.length + 1 > this.real_length ) {\n\n\t\t\tthis.resize( this.real_length * 2 );\n\n\t\t}\n\n\t\tvar bpos = this.length * this.unit_size;\n\n\t\tfor ( var i = 0; i < this.unit_size; i++ ) {\n\n\t\t\tthis.buffer[ bpos + i ] = vector[ this.accessors[ i ] ];\n\n\t\t}\n\n\t\tthis.length++;\n\n\t},\n\n\ttrim_size: function() {\n\n\t\tif ( this.length < this.real_length ) {\n\n\t\t\tthis.resize( this.length );\n\n\t\t}\n\n\t}\n\n};\n\n\n// function convertGeometryToIndexedBuffer( geometry ) {\n//\n// \tvar BGeom = new THREE.BufferGeometry();\n//\n// \t// create a new typed array\n// \tvar vertArray = new TypedArrayHelper( geometry.vertices.length, 0, THREE.Vector3, Float32Array, 3, [ 'x', 'y', 'z' ] );\n// \tvar indexArray = new TypedArrayHelper( geometry.faces.length, 0, THREE.Face3, Uint32Array, 3, [ 'a', 'b', 'c' ] );\n// \tvar uvArray = new TypedArrayHelper( geometry.faceVertexUvs[0].length * 3 * 3, 0, THREE.Vector2, Float32Array, 2, [ 'x', 'y' ] );\n//\n// \tfor ( var i = 0, il = geometry.vertices.length; i < il; i++ ) {\n//\n// \t\tvertArray.push_element( geometry.vertices[ i ] );\n//\n// \t}\n//\n// \tfor ( var i = 0, il = geometry.faces.length; i < il; i++ ) {\n//\n// \t\tindexArray.push_element( geometry.faces[ i ] );\n//\n// \t}\n//\n// \tfor ( var i = 0, il = geometry.faceVertexUvs[ 0 ].length; i < il; i++ ) {\n//\n// \t\tuvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 0 ] );\n// \t\tuvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 1 ] );\n// \t\tuvArray.push_element( geometry.faceVertexUvs[ 0 ][ i ][ 2 ] );\n//\n// \t}\n//\n// \tindexArray.trim_size();\n// \tvertArray.trim_size();\n// \tuvArray.trim_size();\n//\n// \tBGeom.setIndex( new THREE.BufferAttribute( indexArray.buffer, 3 ) );\n// \tBGeom.addAttribute( 'position', new THREE.BufferAttribute( vertArray.buffer, 3 ) );\n// \tBGeom.addAttribute( 'uv', new THREE.BufferAttribute( uvArray.buffer, 2 ) );\n//\n// \treturn BGeom;\n//\n// }\n\nfunction compute_vertex_normals( geometry ) {\n\n\tvar ABC = [ 'a', 'b', 'c' ];\n\tvar XYZ = [ 'x', 'y', 'z' ];\n\tvar XY = [ 'x', 'y' ];\n\n\tvar oldVertices = new TypedArrayHelper( 0, 5, THREE.Vector3, Float32Array, 3, XYZ );\n\tvar oldFaces = new TypedArrayHelper( 0, 3, THREE.Face3, Uint32Array, 3, ABC );\n\toldVertices.from_existing( geometry.getAttribute( 'position' ).array );\n\tvar newNormals = new TypedArrayHelper( oldVertices.length * 3, 4, THREE.Vector3, Float32Array, 3, XYZ );\n\tvar newNormalFaces = new TypedArrayHelper( oldVertices.length, 1, function () { this.x = 0; }, Float32Array, 1, [ 'x' ] );\n\n\tnewNormals.length = oldVertices.length;\n\toldFaces.from_existing( geometry.index.array );\n\tvar a, b, c;\n\tvar my_weight;\n\tvar full_weights = [ 0.0, 0.0, 0.0 ];\n\n\tfor ( var i = 0, il = oldFaces.length; i < il; i++ ) {\n\n\t\toldFaces.index_to_register( i, 0 );\n\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].a, 0 );\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].b, 1 );\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].c, 2 );\n\n\t\tnewNormals.register[ 0 ].subVectors( oldVertices.register[ 1 ], oldVertices.register[ 0 ] );\n\t\tnewNormals.register[ 1 ].subVectors( oldVertices.register[ 2 ], oldVertices.register[ 1 ] );\n\t\tnewNormals.register[ 0 ].cross( newNormals.register[ 1 ] );\n\t\tmy_weight = Math.abs( newNormals.register[ 0 ].length() );\n\n\t\tnewNormalFaces.buffer[ oldFaces.register[ 0 ].a ] += my_weight;\n\t\tnewNormalFaces.buffer[ oldFaces.register[ 0 ].b ] += my_weight;\n\t\tnewNormalFaces.buffer[ oldFaces.register[ 0 ].c ] += my_weight;\n\n\t}\n\n\tvar t_len;\n\n\tfor ( var i = 0, il = oldFaces.length; i < il; i++ ) {\n\n\t\toldFaces.index_to_register( i, 0 );\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].a, 0 );\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].b, 1 );\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].c, 2 );\n\n\t\tnewNormals.register[ 0 ].subVectors( oldVertices.register[ 1 ], oldVertices.register[ 0 ] );\n\t\tnewNormals.register[ 1 ].subVectors( oldVertices.register[ 2 ], oldVertices.register[ 0 ] );\n\n\t\tnewNormals.register[ 3 ].set( 0, 0, 0 );\n\t\tnewNormals.register[ 3 ].x = ( newNormals.register[ 0 ].y * newNormals.register[ 1 ].z ) - ( newNormals.register[ 0 ].z * newNormals.register[ 1 ].y );\n\t\tnewNormals.register[ 3 ].y = ( newNormals.register[ 0 ].z * newNormals.register[ 1 ].x ) - ( newNormals.register[ 0 ].x * newNormals.register[ 1 ].z );\n\t\tnewNormals.register[ 3 ].z = ( newNormals.register[ 0 ].x * newNormals.register[ 1 ].y ) - ( newNormals.register[ 0 ].y * newNormals.register[ 1 ].x );\n\n\t\tnewNormals.register[ 0 ].cross( newNormals.register[ 1 ] );\n\n\t\tmy_weight = Math.abs( newNormals.register[ 0 ].length() );\n\n\t\tfull_weights[ 0 ] = ( my_weight / newNormalFaces.buffer[ oldFaces.register[ 0 ].a ] );\n\t\tfull_weights[ 1 ] = ( my_weight / newNormalFaces.buffer[ oldFaces.register[ 0 ].b ] );\n\t\tfull_weights[ 2 ] = ( my_weight / newNormalFaces.buffer[ oldFaces.register[ 0 ].c ] );\n\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].a * 3 ) + 0 ] += newNormals.register[ 3 ].x * full_weights[ 0 ];\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].a * 3 ) + 1 ] += newNormals.register[ 3 ].y * full_weights[ 0 ];\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].a * 3 ) + 2 ] += newNormals.register[ 3 ].z * full_weights[ 0 ];\n\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].b * 3 ) + 0 ] += newNormals.register[ 3 ].x * full_weights[ 1 ];\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].b * 3 ) + 1 ] += newNormals.register[ 3 ].y * full_weights[ 1 ];\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].b * 3 ) + 2 ] += newNormals.register[ 3 ].z * full_weights[ 1 ];\n\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].c * 3 ) + 0 ] += newNormals.register[ 3 ].x * full_weights[ 2 ];\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].c * 3 ) + 1 ] += newNormals.register[ 3 ].y * full_weights[ 2 ];\n\t\tnewNormals.buffer[ ( oldFaces.register[ 0 ].c * 3 ) + 2 ] += newNormals.register[ 3 ].z * full_weights[ 2 ];\n\n\t}\n\n\tnewNormals.trim_size();\n\tgeometry.addAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );\n\n}\n\nfunction unIndexIndexedGeometry( geometry ) {\n\n\tvar ABC = [ 'a', 'b', 'c' ];\n\tvar XYZ = [ 'x', 'y', 'z' ];\n\tvar XY = [ 'x', 'y' ];\n\n\tvar oldVertices = new TypedArrayHelper( 0, 3, THREE.Vector3, Float32Array, 3, XYZ );\n\tvar oldFaces = new TypedArrayHelper( 0, 3, THREE.Face3, Uint32Array, 3, ABC );\n\tvar oldUvs = new TypedArrayHelper( 0, 3, THREE.Vector2, Float32Array, 2, XY );\n\tvar oldNormals = new TypedArrayHelper( 0, 3, THREE.Vector3, Float32Array, 3, XYZ );\n\n\toldVertices.from_existing( geometry.getAttribute( 'position' ).array );\n\toldFaces.from_existing( geometry.index.array );\n\toldUvs.from_existing( geometry.getAttribute( 'uv' ).array );\n\n\tcompute_vertex_normals( geometry );\n\toldNormals.from_existing( geometry.getAttribute( 'normal' ).array );\n\n\tvar newVertices = new TypedArrayHelper( oldFaces.length * 3, 3, THREE.Vector3, Float32Array, 3, XYZ );\n\tvar newNormals = new TypedArrayHelper( oldFaces.length * 3, 3, THREE.Vector3, Float32Array, 3, XYZ );\n\tvar newUvs = new TypedArrayHelper( oldFaces.length * 3, 3, THREE.Vector2, Float32Array, 2, XY );\n\tvar v, w;\n\n\tfor ( var i = 0, il = oldFaces.length; i < il; i++ ) {\n\n\t\toldFaces.index_to_register( i, 0 );\n\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].a, 0 );\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].b, 1 );\n\t\toldVertices.index_to_register( oldFaces.register[ 0 ].c, 2 );\n\n\t\tnewVertices.push_element( oldVertices.register[ 0 ] );\n\t\tnewVertices.push_element( oldVertices.register[ 1 ] );\n\t\tnewVertices.push_element( oldVertices.register[ 2 ] );\n\n\t\t\tif ( oldUvs.length !== 0 ) {\n\n\t\t\t\toldUvs.index_to_register( ( i * 3 ) + 0, 0 );\n\t\t\t\toldUvs.index_to_register( ( i * 3 ) + 1, 1 );\n\t\t\t\toldUvs.index_to_register( ( i * 3 ) + 2, 2 );\n\n\t\t\t\tnewUvs.push_element( oldUvs.register[ 0 ] );\n\t\t\t\tnewUvs.push_element( oldUvs.register[ 1 ] );\n\t\t\t\tnewUvs.push_element( oldUvs.register[ 2 ] );\n\n\t\t\t}\n\n\t\toldNormals.index_to_register( oldFaces.register[ 0 ].a, 0 );\n\t\toldNormals.index_to_register( oldFaces.register[ 0 ].b, 1 );\n\t\toldNormals.index_to_register( oldFaces.register[ 0 ].c, 2 );\n\n\t\tnewNormals.push_element( oldNormals.register[ 0 ] );\n\t\tnewNormals.push_element( oldNormals.register[ 1 ] );\n\t\tnewNormals.push_element( oldNormals.register[ 2 ] );\n\n\t}\n\n\tnewVertices.trim_size();\n\tnewUvs.trim_size();\n\tnewNormals.trim_size();\n\n\tgeometry.index = null;\n\n\tgeometry.addAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );\n\tgeometry.addAttribute( 'normal', new THREE.BufferAttribute( newNormals.buffer, 3 ) );\n\n\tif ( newUvs.length !== 0 ) {\n\n\t\tgeometry.addAttribute( 'uv', new THREE.BufferAttribute( newUvs.buffer, 2 ) );\n\n\t}\n\n\treturn geometry;\n\n}\n\nTHREE.BufferSubdivisionModifier = function( subdivisions ) {\n\n\tthis.subdivisions = ( subdivisions === undefined ) ? 1 : subdivisions;\n\n};\n\nTHREE.BufferSubdivisionModifier.prototype.modify = function( geometry ) {\n\n\tif ( geometry instanceof THREE.Geometry ) {\n\n\t\tgeometry.mergeVertices();\n\n\t\tif ( typeof geometry.normals === 'undefined' ) {\n\n\t\t\tgeometry.normals = [];\n\n\t\t}\n\n\t\tgeometry = convertGeometryToIndexedBuffer( geometry );\n\n\t} else if ( !( geometry instanceof THREE.BufferGeometry ) ) {\n\n\t\tconsole.error( 'THREE.BufferSubdivisionModifier: Geometry is not an instance of THREE.BufferGeometry or THREE.Geometry' );\n\n\t}\n\n\tvar repeats = this.subdivisions;\n\n\twhile ( repeats -- > 0 ) {\n\n\t\tthis.smooth( geometry );\n\n\t}\n\n\treturn unIndexIndexedGeometry( geometry );\n\n};\n\nvar edge_type = function ( a, b ) {\n\n\tthis.a = a;\n\tthis.b = b;\n\tthis.faces = [];\n\tthis.newEdge = null;\n\n};\n\n( function () {\n\n\t// Some constants\n\tvar ABC = [ 'a', 'b', 'c' ];\n\tvar XYZ = [ 'x', 'y', 'z' ];\n\tvar XY = [ 'x', 'y' ];\n\n\tfunction getEdge( a, b, map ) {\n\n\t\tvar key = Math.min( a, b ) + '_' + Math.max( a, b );\n\t\treturn map[ key ];\n\n\t}\n\n\n\tfunction processEdge( a, b, vertices, map, face, metaVertices ) {\n\n\t\tvar vertexIndexA = Math.min( a, b );\n\t\tvar vertexIndexB = Math.max( a, b );\n\n\t\tvar key = vertexIndexA + '_' + vertexIndexB;\n\n\t\tvar edge;\n\n\t\tif ( key in map ) {\n\n\t\t\tedge = map[ key ];\n\n\t\t} else {\n\n\t\t\tedge = new edge_type( vertexIndexA,vertexIndexB );\n\t\t\tmap[key] = edge;\n\n\t\t}\n\n\t\tedge.faces.push( face );\n\n\t\tmetaVertices[ a ].edges.push( edge );\n\t\tmetaVertices[ b ].edges.push( edge );\n\n\t}\n\n\tfunction generateLookups( vertices, faces, metaVertices, edges ) {\n\n\t\tvar i, il, face, edge;\n\n\t\tfor ( i = 0, il = vertices.length; i < il; i++ ) {\n\n\t\t\tmetaVertices[ i ] = { edges: [] };\n\n\t\t}\n\n\t\tfor ( i = 0, il = faces.length; i < il; i++ ) {\n\n\t\t\tfaces.index_to_register( i, 0 );\n\t\t\tface = faces.register[ 0 ]; // Faces is now a TypedArrayHelper class, not a face3.\n\n\t\t\tprocessEdge( face.a, face.b, vertices, edges, i, metaVertices );\n\t\t\tprocessEdge( face.b, face.c, vertices, edges, i, metaVertices );\n\t\t\tprocessEdge( face.c, face.a, vertices, edges, i, metaVertices );\n\n\t\t}\n\n\t}\n\n\tfunction newFace( newFaces, face ) {\n\n\t\tnewFaces.push_element( face );\n\n\t}\n\n\tfunction midpoint( a, b ) {\n\n\t\treturn ( Math.abs( b - a ) / 2 ) + Math.min( a, b );\n\n\t}\n\n\tfunction newUv( newUvs, a, b, c ) {\n\n\t\tnewUvs.push_element( a );\n\t\tnewUvs.push_element( b );\n\t\tnewUvs.push_element( c );\n\n\t}\n\n\t/////////////////////////////\n\n\t// Performs one iteration of Subdivision\n\n\tTHREE.BufferSubdivisionModifier.prototype.smooth = function ( geometry ) {\n\n\t\tvar oldVertices, oldFaces, oldUvs;\n\t\tvar newVertices, newFaces, newUVs;\n\n\t\tvar n, l, i, il, j, k;\n\t\tvar metaVertices, sourceEdges;\n\n\t\toldVertices = new TypedArrayHelper( 0, 3, THREE.Vector3, Float32Array, 3, XYZ );\n\t\toldFaces = new TypedArrayHelper( 0, 3, THREE.Face3, Uint32Array, 3, ABC );\n\t\toldUvs = new TypedArrayHelper( 0, 3, THREE.Vector2, Float32Array, 2, XY );\n\t\toldVertices.from_existing( geometry.getAttribute( 'position' ).array );\n\t\toldFaces.from_existing( geometry.index.array );\n\t\toldUvs.from_existing( geometry.getAttribute( 'uv' ).array );\n\n\t\tvar doUvs = false;\n\n\t\tif ( typeof oldUvs !== 'undefined' && oldUvs.length !== 0 ) {\n\n\t\t\tdoUvs = true;\n\n\t\t}\n\t\t/******************************************************\n\t\t*\n\t\t* Step 0: Preprocess Geometry to Generate edges Lookup\n\t\t*\n\t\t*******************************************************/\n\n\t\tmetaVertices = new Array( oldVertices.length );\n\t\tsourceEdges = {}; // Edge => { oldVertex1, oldVertex2, faces[]  }\n\n\t\tgenerateLookups( oldVertices, oldFaces, metaVertices, sourceEdges );\n\n\n\t\t/******************************************************\n\t\t*\n\t\t*\tStep 1.\n\t\t*\tFor each edge, create a new Edge Vertex,\n\t\t*\tthen position it.\n\t\t*\n\t\t*******************************************************/\n\n\t\tnewVertices = new TypedArrayHelper( ( geometry.getAttribute( 'position' ).array.length * 2 ) / 3, 2, THREE.Vector3, Float32Array, 3, XYZ );\n\t\tvar other, currentEdge, newEdge, face;\n\t\tvar edgeVertexWeight, adjacentVertexWeight, connectedFaces;\n\n\t\tvar tmp = newVertices.register[ 1 ];\n\t\tfor ( i in sourceEdges ) {\n\n\t\tcurrentEdge = sourceEdges[ i ];\n\t\tnewEdge = newVertices.register[ 0 ];\n\n\t\tedgeVertexWeight = 3 / 8;\n\t\tadjacentVertexWeight = 1 / 8;\n\n\t\tconnectedFaces = currentEdge.faces.length;\n\n\t\t// check how many linked faces. 2 should be correct.\n\t\tif ( connectedFaces !== 2 ) {\n\n\t\t\t// if length is not 2, handle condition\n\t\t\tedgeVertexWeight = 0.5;\n\t\t\tadjacentVertexWeight = 0;\n\n\t\t}\n\n\t\toldVertices.index_to_register( currentEdge.a, 0 );\n\t\toldVertices.index_to_register( currentEdge.b, 1 );\n\t\tnewEdge.addVectors( oldVertices.register[ 0 ], oldVertices.register[ 1 ] ).multiplyScalar( edgeVertexWeight );\n\n\t\ttmp.set( 0, 0, 0 );\n\n\t\tfor ( j = 0; j < connectedFaces; j++ ) {\n\n\t\t\toldFaces.index_to_register( currentEdge.faces[ j ], 0 );\n\t\t\tface = oldFaces.register[ 0 ];\n\n\t\t\tfor ( k = 0; k < 3; k++ ) {\n\n\t\t\t\toldVertices.index_to_register( face[ ABC[ k ] ], 2 );\n\t\t\t\tother = oldVertices.register[ 2 ];\n\n\t\t\t\tif ( face[ ABC[ k ] ] !== currentEdge.a && face[ ABC[ k ] ] !== currentEdge.b) {\n\n\t\t\t\t\tbreak;\n\n\t\t\t\t}\n\n\t\t}\n\n\t\ttmp.add( other );\n\n\t\t}\n\n\t\ttmp.multiplyScalar( adjacentVertexWeight );\n\t\tnewEdge.add( tmp );\n\n\t\tcurrentEdge.newEdge = newVertices.length;\n\t\tnewVertices.push_element( newEdge );\n\n\t\t}\n\n\t\tvar edgeLength = newVertices.length;\n\t\t/******************************************************\n\t\t*\n\t\t*\tStep 2.\n\t\t*\tReposition each source vertices.\n\t\t*\n\t\t*******************************************************/\n\n\t\tvar beta, sourceVertexWeight, connectingVertexWeight;\n\t\tvar connectingEdge, connectingEdges, oldVertex, newSourceVertex;\n\n\t\tfor ( i = 0, il = oldVertices.length; i < il; i++ ) {\n\n\t\t\toldVertices.index_to_register( i, 0, XYZ );\n\t\t\toldVertex = oldVertices.register[ 0 ];\n\n\t\t\t// find all connecting edges (using lookupTable)\n\t\t\tconnectingEdges = metaVertices[ i ].edges;\n\t\t\tn = connectingEdges.length;\n\n\t\t\tif ( n === 3 ) {\n\n\t\t\t\tbeta = 3 / 16;\n\n\t\t\t} else if (n > 3) {\n\n\t\t\t\tbeta = 3 / (8 * n); // Warren's modified formula\n\n\t\t\t}\n\n\t\t\t// Loop's original beta formula\n\t\t\t// beta = 1 / n * ( 5/8 - Math.pow( 3/8 + 1/4 * Math.cos( 2 * Math. PI / n ), 2) );\n\n\t\t\tsourceVertexWeight = 1 - n * beta;\n\t\t\tconnectingVertexWeight = beta;\n\n\t\t\tif ( n <= 2 ) {\n\n\t\t\t\t// crease and boundary rules\n\n\t\t\t\tif ( n === 2 ) {\n\n\t\t\t\t\tsourceVertexWeight = 3 / 4;\n\t\t\t\t\tconnectingVertexWeight = 1 / 8;\n\n\t\t\t\t}\n\n\t\t\t}\n\n\t\t\tnewSourceVertex = oldVertex.multiplyScalar( sourceVertexWeight );\n\n\t\t\ttmp.set( 0, 0, 0 );\n\n\t\t\tfor ( j = 0; j < n; j++ ) {\n\n\t\t\t\tconnectingEdge = connectingEdges[ j ];\n\t\t\t\tother = connectingEdge.a !== i ? connectingEdge.a : connectingEdge.b;\n\t\t\t\toldVertices.index_to_register( other, 1, XYZ );\n\t\t\t\ttmp.add( oldVertices.register[ 1 ] );\n\n\t\t\t}\n\n\t\t\ttmp.multiplyScalar( connectingVertexWeight );\n\t\t\tnewSourceVertex.add( tmp );\n\n\t\t\tnewVertices.push_element( newSourceVertex,XYZ );\n\n\t\t}\n\n\n\t\t/******************************************************\n\t\t*\n\t\t*\tStep 3.\n\t\t*\tGenerate faces between source vertices and edge vertices.\n\t\t*\n\t\t*******************************************************/\n\n\n\t\tvar edge1, edge2, edge3;\n\t\tnewFaces = new TypedArrayHelper( ( geometry.index.array.length * 4 ) / 3, 1, THREE.Face3, Float32Array, 3, ABC );\n\t\tnewUVs = new TypedArrayHelper( ( geometry.getAttribute( 'uv' ).array.length * 4 ) / 2, 3, THREE.Vector2, Float32Array, 2, XY );\n\t\tvar x3 = newUVs.register[ 0 ];\n\t\tvar x4 = newUVs.register[ 1 ];\n\t\tvar x5 = newUVs.register[ 2 ];\n\t\tvar tFace = newFaces.register[ 0 ];\n\n\t\tfor ( i = 0, il = oldFaces.length; i < il; i++ ) {\n\n\t\t\toldFaces.index_to_register( i, 0 );\n\t\t\tface = oldFaces.register[ 0 ];\n\n\t\t\t// find the 3 new edges vertex of each old face\n\t\t\t// The new source verts are added after the new edge verts now..\n\n\t\t\tedge1 = getEdge( face.a, face.b, sourceEdges ).newEdge;\n\t\t\tedge2 = getEdge( face.b, face.c, sourceEdges ).newEdge;\n\t\t\tedge3 = getEdge( face.c, face.a, sourceEdges ).newEdge;\n\n\t\t\t// create 4 faces.\n\t\t\ttFace.set( edge1, edge2, edge3 );\n\t\t\tnewFace( newFaces, tFace );\n\t\t\ttFace.set( face.a + edgeLength, edge1, edge3 );\n\t\t\tnewFace( newFaces, tFace );\n\t\t\ttFace.set( face.b + edgeLength, edge2, edge1 );\n\t\t\tnewFace( newFaces, tFace );\n\t\t\ttFace.set( face.c + edgeLength, edge3, edge2 );\n\t\t\tnewFace( newFaces, tFace );\n\n\n\t\t\t/*\n\t\t\t\t0________C_______2\n\t\t\t\t \\      /\\      /\n\t\t\t\t  \\ F2 /  \\ F4 /\n\t\t\t\t   \\  / F1 \\  /\n\t\t\t\t    \\/______\\/\n\t\t\t\t   A \\      / B\n\t\t\t\t      \\ F3 /\n\t\t\t\t       \\  /\n\t\t\t\t        \\/\n\t\t\t\t         1\n\n\t\t\t\tDraw orders:\n\t\t\t\tF1: ABC x3,x4,x5\n\t\t\t\tF2: 0AC x0,x3,x5\n\t\t\t\tF3: 1BA x1,x4,x3\n\t\t\t\tF4: 2CB x2,x5,x4\n\n\t\t\t\t0: x0\n\t\t\t\t1: x1\n\t\t\t\t2: x2\n\t\t\t\tA: x3\n\t\t\t\tB: x4\n\t\t\t\tC: x5\n\t\t\t*/\n\n\t\t\tif ( doUvs === true ) {\n\n\t\t\t\toldUvs.index_to_register( ( i * 3 ) + 0, 0 );\n\t\t\t\toldUvs.index_to_register( ( i * 3 ) + 1, 1 );\n\t\t\t\toldUvs.index_to_register( ( i * 3 ) + 2, 2 );\n\n\t\t\t\tvar x0 = oldUvs.register[ 0 ]; // uv[0];\n\t\t\t\tvar x1 = oldUvs.register[ 1 ]; // uv[1];\n\t\t\t\tvar x2 = oldUvs.register[ 2 ]; // uv[2];\n\n\t\t\t\tx3.set( midpoint( x0.x, x1.x ), midpoint( x0.y, x1.y ) );\n\t\t\t\tx4.set( midpoint( x1.x, x2.x ), midpoint( x1.y, x2.y ) );\n\t\t\t\tx5.set( midpoint( x0.x, x2.x ), midpoint( x0.y, x2.y ) );\n\n\t\t\t\tnewUv( newUVs, x3, x4, x5 );\n\t\t\t\tnewUv( newUVs, x0, x3, x5 );\n\n\t\t\t\tnewUv( newUVs, x1, x4, x3 );\n\t\t\t\tnewUv( newUVs, x2, x5, x4 );\n\n\t\t\t}\n\n\t\t}\n\n\t\t// Overwrite old arrays\n\n\t\tnewFaces.trim_size();\n\t\tnewVertices.trim_size();\n\t\tnewUVs.trim_size();\n\n\t\tgeometry.setIndex( new THREE.BufferAttribute( newFaces.buffer ,3 ) );\n\t\tgeometry.addAttribute( 'position', new THREE.BufferAttribute( newVertices.buffer, 3 ) );\n\t\tgeometry.addAttribute( 'uv', new THREE.BufferAttribute( newUVs.buffer, 2 ) );\n\n\t};\n\n} ) ();\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvZ2xvdy5tanMuanMiLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly8vLi9zcmMvZ2xvdy5tanM/YjJlOSJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBMb29wU3ViZGl2aXNpb24gfSBmcm9tICcuL0xvb3BTdWJkaXZpc2lvbi5tanMnO1xuXG5BRlJBTUUucmVnaXN0ZXJDb21wb25lbnQoJ2dsb3cnLCB7XG4gIHNjaGVtYToge1xuICAgIGVuYWJsZWQ6IHtkZWZhdWx0OiB0cnVlfSxcbiAgICBjOiB7dHlwZTogJ251bWJlcicsIGRlZmF1bHQ6IDEgfSxcbiAgICBwOiB7dHlwZTogJ251bWJlcicsIGRlZmF1bHQ6IDEuNCB9LFxuICAgIGNvbG9yOiB7dHlwZTogJ2NvbG9yJywgZGVmYXVsdDogJyNGRkZGMDAnfSxcbiAgICBzY2FsZToge3R5cGU6ICdudW1iZXInLCBkZWZhdWx0OiAyIH0sXG4gICAgc2lkZToge3R5cGU6ICdzdHJpbmcnLCBkZWZhdWx0OiBcImZyb250XCIgfSxcbiAgfSxcbiAgaW5pdDogZnVuY3Rpb24gKCkge1xuXHRcdGNvbnN0IHRoYXQgPSB0aGlzO1xuXHRcdGNvbnN0IHJ1biA9IGZ1bmN0aW9uICgpIHtcblx0XHRcdGNvbnN0IGNhbWVyYSA9IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJ1tjYW1lcmFdJykub2JqZWN0M0Q7XG5cdFx0XHR0aGF0LmNhbWVyYSA9IGNhbWVyYTtcblxuXHRcdFx0bGV0IHNpZGVSZW5kZXIgPSBUSFJFRS5Gcm9udFNpZGU7XG5cdFx0XHRpZiAodGhhdC5kYXRhLnNpZGUgPT09IFwiYmFja1wiKSB7XG5cdFx0XHRcdHNpZGVSZW5kZXIgPSBUSFJFRS5CYWNrU2lkZTtcblx0XHRcdH1cblxuXHRcdFx0Ly8gU2V0dXAgc2hhZGVyXG5cdFx0XHR0aGF0Lmdsb3dNYXRlcmlhbCA9IG5ldyBUSFJFRS5TaGFkZXJNYXRlcmlhbCh7XG5cdFx0XHRcdHVuaWZvcm1zOiB7XG5cdFx0XHRcdFx0XCJjXCI6IHt0eXBlOiBcImZcIiwgdmFsdWU6IHRoYXQuZGF0YS5jfSxcblx0XHRcdFx0XHRcInBcIjoge3R5cGU6IFwiZlwiLCB2YWx1ZTogdGhhdC5kYXRhLnB9LFxuXHRcdFx0XHRcdGdsb3dDb2xvcjoge3R5cGU6IFwiY1wiLCB2YWx1ZTogbmV3IFRIUkVFLkNvbG9yKHRoYXQuZGF0YS5jb2xvcil9LFxuXHRcdFx0XHRcdHZpZXdWZWN0b3I6IHt0eXBlOiBcInYzXCIsIHZhbHVlOiBjYW1lcmEucG9zaXRpb259XG5cdFx0XHRcdH0sXG5cdFx0XHRcdHZlcnRleFNoYWRlcjogVEhSRUUuX19HbG93U2hhZGVyLnZlcnRleFNoYWRlcixcblx0XHRcdFx0ZnJhZ21lbnRTaGFkZXI6IFRIUkVFLl9fR2xvd1NoYWRlci5mcmFnbWVudFNoYWRlcixcblx0XHRcdFx0c2lkZTogc2lkZVJlbmRlcixcblx0XHRcdFx0YmxlbmRpbmc6IFRIUkVFLkFkZGl0aXZlQmxlbmRpbmcsXG5cdFx0XHRcdHRyYW5zcGFyZW50OiB0cnVlXG5cdFx0XHR9KTtcblxuXHRcdFx0Y29uc3QgZ2VvbWV0cnkgPSBMb29wU3ViZGl2aXNpb24ubW9kaWZ5KHRoYXQuZWwub2JqZWN0M0RNYXAubWVzaC5nZW9tZXRyeSwgMiwge30pO1xuXG5cdFx0XHQvLyBJU1NVRSBmb3IgT0JKczogPj4gbGluZSBiZWxvd1xuXHRcdFx0Ly8gbGV0IG9iamVjdCA9IHRoYXQuZWwub2JqZWN0M0RNYXAubWVzaC5nZW9tZXRyeS5jbG9uZSgpO1xuXHRcdFx0Ly8gb2JqZWN0ID0gbmV3IFRIUkVFLkdlb21ldHJ5KCkuZnJvbUJ1ZmZlckdlb21ldHJ5KG9iamVjdCk7XG5cdFx0XHQvLyBjb25zdCBtb2RpZmllciA9IG5ldyBUSFJFRS5CdWZmZXJTdWJkaXZpc2lvbk1vZGlmaWVyKDIpO1xuXHRcdFx0Ly8gb2JqZWN0ID0gbW9kaWZpZXIubW9kaWZ5KG9iamVjdCk7XG5cblx0XHRcdHRoYXQuZ2xvd01lc2ggPSBuZXcgVEhSRUUuTWVzaChnZW9tZXRyeSwgdGhhdC5nbG93TWF0ZXJpYWwpO1xuXHRcdFx0dGhhdC5lbC5vYmplY3QzRC5hZGQodGhhdC5nbG93TWVzaCk7XG5cblx0XHRcdGlmICghdGhhdC5kYXRhLmVuYWJsZWQpIHtcblx0XHRcdFx0dGhhdC5nbG93TWVzaC52aXNpYmxlID0gZmFsc2U7XG5cdFx0XHR9XG5cdFx0fTtcblxuXHRcdC8vIE1ha2Ugc3VyZSB0aGUgZW50aXR5IGhhcyBhIG1lc2gsIG90aGVyd2lzZSB3YWl0IGZvciB0aGUgM0QgbW9kZWwgdG8gYmUgbG9hZGVkLi5cbiAgICBmdW5jdGlvbiB3YWl0Rm9yRW50aXR5TG9hZCgpIHtcbiAgICAgIGlmICh0aGF0LmVsLm9iamVjdDNETWFwLm1lc2gpIHsgcmV0dXJuIHJ1bigpIH1cbiAgICAgIHRoYXQuZWwuYWRkRXZlbnRMaXN0ZW5lcignbW9kZWwtbG9hZGVkJywgcnVuKTtcbiAgICB9XG5cbiAgICAvLyBNYWtlIHN1cmUgdGhlIHNjZW5lIGhhcyBiZWVuIGxvYWRlZC4uXG4gICAgaWYgKHRoaXMuZWwuc2NlbmVFbC5oYXNMb2FkZWQpIHsgcmV0dXJuIHdhaXRGb3JFbnRpdHlMb2FkKCk7IH1cbiAgICB0aGlzLmVsLnNjZW5lRWwuYWRkRXZlbnRMaXN0ZW5lcignbG9hZGVkJywgd2FpdEZvckVudGl0eUxvYWQpO1xuICB9LFxuICB1cGRhdGU6IGZ1bmN0aW9uICgpIHtcbiAgICBpZiAodGhpcy5kYXRhLmVuYWJsZWQpIHtcbiAgICAgIGlmICh0aGlzLmdsb3dNZXNoKSB7XG4gICAgICAgIHRoaXMuZ2xvd01lc2gudmlzaWJsZSA9IHRydWU7XG5cbiAgICAgICAgaWYgKHRoaXMuZGF0YS5jIDwgMCkgeyB0aGlzLmRhdGEuYyA9IDA7IH1cbiAgICAgICAgaWYgKHRoaXMuZGF0YS5jID4gMSkgeyB0aGlzLmRhdGEuYyA9IDE7IH1cbiAgICAgICAgaWYgKHRoaXMuZGF0YS5wIDwgMCkgeyB0aGlzLmRhdGEucCA9IDA7IH1cbiAgICAgICAgaWYgKHRoaXMuZGF0YS5wID4gNikgeyB0aGlzLmRhdGEucCA9IDY7IH1cblxuICAgICAgICB0aGlzLmdsb3dNZXNoLm1hdGVyaWFsLnVuaWZvcm1zWyBcImNcIiBdLnZhbHVlID0gdGhpcy5kYXRhLmM7XG4gICAgICAgIHRoaXMuZ2xvd01lc2gubWF0ZXJpYWwudW5pZm9ybXNbIFwicFwiIF0udmFsdWUgPSB0aGlzLmRhdGEucDtcbiAgICAgICAgdGhpcy5nbG93TWVzaC5tYXRlcmlhbC51bmlmb3Jtcy5nbG93Q29sb3IudmFsdWUuc2V0SGV4KCB0aGlzLmRhdGEuY29sb3IucmVwbGFjZShcIiNcIiwgXCIweFwiKSk7XG5cblx0XHRcdFx0bGV0IHNpZGVSZW5kZXIgPSBUSFJFRS5Gcm9udFNpZGU7XG5cdFx0XHRcdGlmICh0aGlzLmRhdGEuc2lkZSA9PT0gXCJiYWNrXCIpIHtcbiAgICAgICAgICBzaWRlUmVuZGVyID0gVEhSRUUuQmFja1NpZGU7XG4gICAgICAgIH1cbiAgICAgICAgdGhpcy5nbG93TWVzaC5tYXRlcmlhbC5zaWRlID0gc2lkZVJlbmRlcjtcbiAgICAgIH1cbiAgICB9IGVsc2UgaWYgKHRoaXMuZ2xvd01lc2gpIHtcbiAgICAgIHRoaXMuZ2xvd01lc2gudmlzaWJsZSA9IGZhbHNlO1xuICAgIH1cbiAgfSxcbiAgdGljazogZnVuY3Rpb24gKCkge1xuICAgIGlmICh0aGlzLmdsb3dNZXNoKSB7XG4gICAgICB0aGlzLmdsb3dNZXNoLnJvdGF0aW9uLnNldCh0aGlzLmVsLm9iamVjdDNELnJvdGF0aW9uLngsIHRoaXMuZWwub2JqZWN0M0Qucm90YXRpb24ueSwgdGhpcy5lbC5vYmplY3QzRC5yb3RhdGlvbi56KTtcbiAgICAgIHRoaXMuZ2xvd01lc2guc2NhbGUuc2V0KHRoaXMuZWwub2JqZWN0M0Quc2NhbGUueCp0aGlzLmRhdGEuc2NhbGUsIHRoaXMuZWwub2JqZWN0M0Quc2NhbGUueSp0aGlzLmRhdGEuc2NhbGUsIHRoaXMuZWwub2JqZWN0M0Quc2NhbGUueip0aGlzLmRhdGEuc2NhbGUpO1xuICAgICAgaWYgKCF0aGlzLmNhbWVyYSkgeyByZXR1cm47IH1cbiAgICAgIHRoaXMuZ2xvd01lc2gubWF0ZXJpYWwudW5pZm9ybXMudmlld1ZlY3Rvci52YWx1ZSA9XG4gICAgXHRcdG5ldyBUSFJFRS5WZWN0b3IzKCkuc3ViVmVjdG9ycyggdGhpcy5jYW1lcmEucG9zaXRpb24sIHRoaXMuZ2xvd01lc2gucG9zaXRpb24gKTtcbiAgICB9XG4gIH0sXG4gIHJlbW92ZTogZnVuY3Rpb24gKCkge1xuICAgIGlmICghdGhpcy5nbG93TWVzaCkgeyByZXR1cm47IH1cblx0XHRjb25zdCBzY2VuZSA9IHRoaXMuZWwuc2NlbmVFbC5vYmplY3QzRDtcblx0XHRzY2VuZS5yZW1vdmUoIHRoaXMuZ2xvd01lc2ggKTtcbiAgICB0aGlzLmdsb3dNZXNoID0gbnVsbDtcbiAgICB0aGlzLmdsb3dNYXRlcmlhbCA9IG51bGw7XG4gIH0sXG4gIHBhdXNlOiBmdW5jdGlvbiAoKSB7fSxcbiAgcGxheTogZnVuY3Rpb24gKCkge31cbn0pO1xuXG5cblRIUkVFLl9fR2xvd1NoYWRlciA9IHtcblxuXHR2ZXJ0ZXhTaGFkZXI6IFtcblxuICAgIFwidW5pZm9ybSB2ZWMzIHZpZXdWZWN0b3I7XCIsXG4gICAgXCJ1bmlmb3JtIGZsb2F0IGM7XCIsXG4gICAgXCJ1bmlmb3JtIGZsb2F0IHA7XCIsXG4gICAgXCJ2YXJ5aW5nIGZsb2F0IGludGVuc2l0eTtcIixcbiAgICBcInZvaWQgbWFpbigpIFwiLFxuICAgIFwie1wiLFxuICAgICAgXCJ2ZWMzIHZOb3JtYWwgPSBub3JtYWxpemUoIG5vcm1hbE1hdHJpeCAqIG5vcm1hbCApO1wiLFxuICAgIFx0XCJ2ZWMzIHZOb3JtZWwgPSBub3JtYWxpemUoIG5vcm1hbE1hdHJpeCAqIHZpZXdWZWN0b3IgKTtcIixcbiAgICBcdFwiaW50ZW5zaXR5ID0gcG93KCBjIC0gZG90KHZOb3JtYWwsIHZOb3JtZWwpLCBwICk7XCIsXG5cbiAgICAgIFwiZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uTWF0cml4ICogbW9kZWxWaWV3TWF0cml4ICogdmVjNCggcG9zaXRpb24sIDEuMCApO1wiLFxuICAgIFwifVwiXG5cblx0XS5qb2luKFwiXFxuXCIpLFxuXG5cdGZyYWdtZW50U2hhZGVyOiBbXG5cblx0XHRcInVuaWZvcm0gdmVjMyBnbG93Q29sb3I7XCIsXG4gICAgXCJ2YXJ5aW5nIGZsb2F0IGludGVuc2l0eTtcIixcbiAgICBcInZvaWQgbWFpbigpIFwiLFxuICAgIFwie1wiLFxuICAgIFx0XCJ2ZWMzIGdsb3cgPSBnbG93Q29sb3IgKiBpbnRlbnNpdHk7XCIsXG4gICAgICBcImdsX0ZyYWdDb2xvciA9IHZlYzQoIGdsb3csIDEuMCApO1wiLFxuICAgIFwifVwiXG5cblx0XS5qb2luKFwiXFxuXCIpXG5cbn07XG5cblxuXG5cbi8qXG4gKiBAYXV0aG9yIHp6ODUgLyBodHRwOi8vdHdpdHRlci5jb20vYmx1cnNwbGluZSAvIGh0dHA6Ly93d3cubGFiNGdhbWVzLm5ldC96ejg1L2Jsb2dcbiAqIEBhdXRob3IgTWF0dGhldyBBZGFtcyAvIGh0dHA6Ly93d3cuY2VudGVyaW9ud2FyZS5jb20gLSBhZGRlZCBVViBzdXBwb3J0IGFuZCByZXdyb3RlIHRvIHVzZSBidWZmZXJnZW9tZXRyeS5cbiAqXG4gKiBTdWJkaXZpc2lvbiBHZW9tZXRyeSBNb2RpZmllciB1c2luZyBMb29wIFN1YmRpdmlzaW9uIFNjaGVtZSBmb3IgR2VvbWV0cnkgLyBCdWZmZXJHZW9tZXRyeVxuICpcbiAqIFJlZmVyZW5jZXM6XG4gKlx0aHR0cDovL2dyYXBoaWNzLnN0YW5mb3JkLmVkdS9+bWRmaXNoZXIvc3ViZGl2aXNpb24uaHRtbFxuICpcdGh0dHA6Ly93d3cuaG9sbWVzM2QubmV0L2dyYXBoaWNzL3N1YmRpdmlzaW9uL1xuICpcdGh0dHA6Ly93d3cuY3MucnV0Z2Vycy5lZHUvfmRlY2FybG8vcmVhZGluZ3Mvc3ViZGl2LXNnMDBjLnBkZlxuICpcbiAqIEtub3duIElzc3VlczpcbiAqXHQtIGN1cnJlbnRseSBkb2Vzbid0IGhhbmRsZSBcIlNoYXJwIEVkZ2VzXCJcbiAqXHQtIG5vIGNoZWNrcyB0byBwcmV2ZW50IGJyZWFraW5nIHdoZW4gdXYncyBkb24ndCBleGlzdC5cbiAqXHQtIHZlcnRleCBjb2xvcnMgYXJlIHVuc3VwcG9ydGVkLlxuICpcdCoqRERTIEltYWdlcyB3aGVuIHVzaW5nIGNvcnJlY3RlZCB1didzIHBhc3NlZCB0byBzdWJkaXZpc2lvbiBtb2RpZmllciB3aWxsIGhhdmUgdGhlaXIgdXYncyBmbGlweSdkIHdpdGhpbiB0aGUgY29ycmVjdCB1diBzZXRcbiAqXHQqKkVpdGhlciBmbGlweSB0aGUgRERTIGltYWdlLCBvciB1c2Ugc2hhZGVycy4gRG9uJ3QgdHJ5IGNvcnJlY3RpbmcgdGhlIHV2J3MgYmVmb3JlIHBhc3NpbmcgaW50byBzdWJkaXYgKGVnOiB2PTEtdikuXG4gKlxuICogQGlucHV0IFRIUkVFLkdlb21ldHJ5LCBvciBpbmRleCdkIFRIUkVFLkJ1ZmZlckdlb21ldHJ5IHdpdGggZmFjZVVWJ3MgKE5vdCB2ZXJ0ZXggdXYncylcbiAqIEBvdXRwdXQgbm9uLWluZGV4ZWQgdmVydGV4IHBvaW50cywgdXYncywgbm9ybWFscy5cbiAqXG4gKiBUaGUgVHlwZWRBcnJheUhlbHBlciBjbGFzcyBpcyBkZXNpZ25lZCB0byBhc3Npc3QgbWFuYWdpbmcgdHlwZWQgYXJyYXlzLCBhbmQgdG8gYWxsb3cgdGhlIHJlbW92YWwgb2YgYWxsICduZXcgVmVjdG9yMywgbmV3IEZhY2UzLCBuZXcgVmVjdG9yMicuXG4gKlxuICogSXQgd2lsbCBhdXRvbWF0aWNhbGx5IHJlc2l6ZSB0aGVtIGlmIHRyeWluZyB0byBwdXNoIGEgbmV3IGVsZW1lbnQgdG8gYW4gYXJyYXkgdGhhdCBpc24ndCBsb25nIGVub3VnaFxuICogSXQgcHJvdmlkZXMgJ3JlZ2lzdGVycycgdGhhdCB0aGUgdW5pdHMgY2FuIGJlIG1hcHBlZCB0by4gVGhpcyBhbGxvd3MgYSBzbWFsbCBzZXQgb2Ygb2JqZWN0c1xuICogKGV4OiB2ZWN0b3IzJ3MsIGZhY2UzJ3MsIHZlY3RvcjIncykgdG8gYmUgYWxsb2NhdGVkIHRoZW4gdXNlZCwgdG8gZWxpbWluYXRlIGFueSBuZWVkIHRvIHJld3JpdGUgYWxsXG4gKiB0aGUgZmVhdHVyZXMgdGhvc2UgY2xhc3NlcyBvZmZlciB3aGlsZSBub3QgcmVxdWlyaW5nIHNvbWVfaHVnZV9udW1iZXIgdG8gYmUgYWxsb2NhdGVkLlxuICogSXQgc2hvdWxkIGJlIG1vdmVkIGludG8gaXQncyBvd24gZmlsZSBob25lc3RseSwgdGhlbiBpbmNsdWRlZCBiZWZvcmUgdGhlIEJ1ZmZlclN1YmRpdmlzaW9uTW9kaWZpZXIgLSBtYXliZSBpbiB0aHJlZSdzIGNvcmU/XG4gKlxuICovXG5cbnZhciBUeXBlZEFycmF5SGVscGVyID0gZnVuY3Rpb24oIHNpemUsIHJlZ2lzdGVycywgcmVnaXN0ZXJfdHlwZSwgYXJyYXlfdHlwZSwgdW5pdF9zaXplLCBhY2Nlc3NvcnMgKSB7XG5cblx0dGhpcy5hcnJheV90eXBlID0gYXJyYXlfdHlwZTtcblx0dGhpcy5yZWdpc3Rlcl90eXBlID0gcmVnaXN0ZXJfdHlwZTtcblx0dGhpcy51bml0X3NpemUgPSB1bml0X3NpemU7XG5cdHRoaXMuYWNjZXNzb3JzID0gYWNjZXNzb3JzO1xuXHR0aGlzLmJ1ZmZlciA9IG5ldyBhcnJheV90eXBlKCBzaXplICogdW5pdF9zaXplICk7XG5cdHRoaXMucmVnaXN0ZXIgPSBbXTtcblx0dGhpcy5sZW5ndGggPSAwO1xuXHR0aGlzLnJlYWxfbGVuZ3RoID0gc2l6ZTtcblx0dGhpcy5hdmFpbGFibGVfcmVnaXN0ZXJzID0gcmVnaXN0ZXJzO1xuXG5cdGZvciAoIHZhciBpID0gMDsgaSA8IHJlZ2lzdGVyczsgaSsrICkge1xuXG5cdFx0dGhpcy5yZWdpc3Rlci5wdXNoKCBuZXcgcmVnaXN0ZXJfdHlwZSgpICk7XG5cblx0fVxuXG59O1xuXG5UeXBlZEFycmF5SGVscGVyLnByb3RvdHlwZSA9IHtcblxuXHRjb25zdHJ1Y3RvcjogVHlwZWRBcnJheUhlbHBlcixcblxuXHRpbmRleF90b19yZWdpc3RlcjogZnVuY3Rpb24oIGluZGV4LCByZWdpc3RlciwgaXNMb29wICkge1xuXG5cdFx0dmFyIGJhc2UgPSBpbmRleCAqIHRoaXMudW5pdF9zaXplO1xuXG5cdFx0aWYgKCByZWdpc3RlciA+PSB0aGlzLmF2YWlsYWJsZV9yZWdpc3RlcnMgKSB7XG5cblx0XHRcdHRocm93IG5ldyBFcnJvciggJ1RIUkVFLkJ1ZmZlclN1YmRpdmlzaW9uTW9kaWZpZXI6IE5vdCBlbm91Z2ggcmVnaXN0ZXJzIGluIFR5cGVkQXJyYXlIZWxwZXIuJyApO1xuXG5cdFx0fVxuXG5cdFx0aWYgKCBpbmRleCA+IHRoaXMubGVuZ3RoICkge1xuXG5cdFx0XHR0aHJvdyBuZXcgRXJyb3IoICdUSFJFRS5CdWZmZXJTdWJkaXZpc2lvbk1vZGlmaWVyOiBJbmRleCBpcyBvdXQgb2YgcmFuZ2UgaW4gVHlwZWRBcnJheUhlbHBlci4nICk7XG5cblx0XHR9XG5cblx0XHRmb3IgKCB2YXIgaSA9IDA7IGkgPCB0aGlzLnVuaXRfc2l6ZTsgaSsrICkge1xuXG5cdFx0XHQoIHRoaXMucmVnaXN0ZXJbIHJlZ2lzdGVyIF0gKVsgdGhpcy5hY2Nlc3NvcnNbIGkgXSBdID0gdGhpcy5idWZmZXJbIGJhc2UgKyBpIF07XG5cblx0XHR9XG5cblx0fSxcblxuXHRyZXNpemU6IGZ1bmN0aW9uKCBuZXdfc2l6ZSApIHtcblxuXHRcdGlmICggbmV3X3NpemUgPT09IDAgKSB7XG5cblx0XHRcdG5ld19zaXplID0gODtcblxuXHRcdH1cblxuXHRcdGlmICggbmV3X3NpemUgPCB0aGlzLmxlbmd0aCApIHtcblxuXHRcdFx0dGhpcy5idWZmZXIgPSB0aGlzLmJ1ZmZlci5zdWJhcnJheSggMCwgdGhpcy5sZW5ndGggKiB0aGlzLnVuaXRfc2l6ZSApO1xuXG5cdFx0fSBlbHNlIHtcblxuXHRcdFx0dmFyIG5CdWZmZXI7XG5cblx0XHRcdGlmICggdGhpcy5idWZmZXIubGVuZ3RoIDwgbmV3X3NpemUgKiB0aGlzLnVuaXRfc2l6ZSApIHtcblxuXHRcdFx0XHRuQnVmZmVyID0gbmV3IHRoaXMuYXJyYXlfdHlwZSggbmV3X3NpemUgKiB0aGlzLnVuaXRfc2l6ZSApO1xuXHRcdFx0XHRuQnVmZmVyLnNldCggdGhpcy5idWZmZXIgKTtcblx0XHRcdFx0dGhpcy5idWZmZXIgPSBuQnVmZmVyO1xuXHRcdFx0XHR0aGlzLnJlYWxfbGVuZ3RoID0gbmV3X3NpemU7XG5cblx0XHRcdH0gZWxzZSB7XG5cblx0XHRcdFx0bkJ1ZmZlciA9IG5ldyB0aGlzLmFycmF5X3R5cGUoIG5ld19zaXplICogdGhpcy51bml0X3NpemUgKTtcblx0XHRcdFx0bkJ1ZmZlci5zZXQoIHRoaXMuYnVmZmVyLnN1YmFycmF5KCAwLCB0aGlzLmxlbmd0aCAqIHRoaXMudW5pdF9zaXplICkgKTtcblx0XHRcdFx0dGhpcy5idWZmZXIgPSBuQnVmZmVyO1xuXHRcdFx0XHR0aGlzLnJlYWxfbGVuZ3RoID0gbmV3X3NpemU7XG5cblx0XHRcdH1cblxuXHRcdH1cblxuXHR9LFxuXG5cdGZyb21fZXhpc3Rpbmc6IGZ1bmN0aW9uKCBvbGRBcnJheSApIHtcblxuXHRcdHZhciBuZXdfc2l6ZSA9IG9sZEFycmF5Lmxlbmd0aDtcblx0XHR0aGlzLmJ1ZmZlciA9IG5ldyB0aGlzLmFycmF5X3R5cGUoIG5ld19zaXplICk7XG5cdFx0dGhpcy5idWZmZXIuc2V0KCBvbGRBcnJheSApO1xuXHRcdHRoaXMubGVuZ3RoID0gb2xkQXJyYXkubGVuZ3RoIC8gdGhpcy51bml0X3NpemU7XG5cdFx0dGhpcy5yZWFsX2xlbmd0aCA9IHRoaXMubGVuZ3RoO1xuXG5cdH0sXG5cblx0cHVzaF9lbGVtZW50OiBmdW5jdGlvbiggdmVjdG9yICkge1xuXG5cdFx0aWYgKCB0aGlzLmxlbmd0aCArIDEgPiB0aGlzLnJlYWxfbGVuZ3RoICkge1xuXG5cdFx0XHR0aGlzLnJlc2l6ZSggdGhpcy5yZWFsX2xlbmd0aCAqIDIgKTtcblxuXHRcdH1cblxuXHRcdHZhciBicG9zID0gdGhpcy5sZW5ndGggKiB0aGlzLnVuaXRfc2l6ZTtcblxuXHRcdGZvciAoIHZhciBpID0gMDsgaSA8IHRoaXMudW5pdF9zaXplOyBpKysgKSB7XG5cblx0XHRcdHRoaXMuYnVmZmVyWyBicG9zICsgaSBdID0gdmVjdG9yWyB0aGlzLmFjY2Vzc29yc1sgaSBdIF07XG5cblx0XHR9XG5cblx0XHR0aGlzLmxlbmd0aCsrO1xuXG5cdH0sXG5cblx0dHJpbV9zaXplOiBmdW5jdGlvbigpIHtcblxuXHRcdGlmICggdGhpcy5sZW5ndGggPCB0aGlzLnJlYWxfbGVuZ3RoICkge1xuXG5cdFx0XHR0aGlzLnJlc2l6ZSggdGhpcy5sZW5ndGggKTtcblxuXHRcdH1cblxuXHR9XG5cbn07XG5cblxuLy8gZnVuY3Rpb24gY29udmVydEdlb21ldHJ5VG9JbmRleGVkQnVmZmVyKCBnZW9tZXRyeSApIHtcbi8vXG4vLyBcdHZhciBCR2VvbSA9IG5ldyBUSFJFRS5CdWZmZXJHZW9tZXRyeSgpO1xuLy9cbi8vIFx0Ly8gY3JlYXRlIGEgbmV3IHR5cGVkIGFycmF5XG4vLyBcdHZhciB2ZXJ0QXJyYXkgPSBuZXcgVHlwZWRBcnJheUhlbHBlciggZ2VvbWV0cnkudmVydGljZXMubGVuZ3RoLCAwLCBUSFJFRS5WZWN0b3IzLCBGbG9hdDMyQXJyYXksIDMsIFsgJ3gnLCAneScsICd6JyBdICk7XG4vLyBcdHZhciBpbmRleEFycmF5ID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoIGdlb21ldHJ5LmZhY2VzLmxlbmd0aCwgMCwgVEhSRUUuRmFjZTMsIFVpbnQzMkFycmF5LCAzLCBbICdhJywgJ2InLCAnYycgXSApO1xuLy8gXHR2YXIgdXZBcnJheSA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCBnZW9tZXRyeS5mYWNlVmVydGV4VXZzWzBdLmxlbmd0aCAqIDMgKiAzLCAwLCBUSFJFRS5WZWN0b3IyLCBGbG9hdDMyQXJyYXksIDIsIFsgJ3gnLCAneScgXSApO1xuLy9cbi8vIFx0Zm9yICggdmFyIGkgPSAwLCBpbCA9IGdlb21ldHJ5LnZlcnRpY2VzLmxlbmd0aDsgaSA8IGlsOyBpKysgKSB7XG4vL1xuLy8gXHRcdHZlcnRBcnJheS5wdXNoX2VsZW1lbnQoIGdlb21ldHJ5LnZlcnRpY2VzWyBpIF0gKTtcbi8vXG4vLyBcdH1cbi8vXG4vLyBcdGZvciAoIHZhciBpID0gMCwgaWwgPSBnZW9tZXRyeS5mYWNlcy5sZW5ndGg7IGkgPCBpbDsgaSsrICkge1xuLy9cbi8vIFx0XHRpbmRleEFycmF5LnB1c2hfZWxlbWVudCggZ2VvbWV0cnkuZmFjZXNbIGkgXSApO1xuLy9cbi8vIFx0fVxuLy9cbi8vIFx0Zm9yICggdmFyIGkgPSAwLCBpbCA9IGdlb21ldHJ5LmZhY2VWZXJ0ZXhVdnNbIDAgXS5sZW5ndGg7IGkgPCBpbDsgaSsrICkge1xuLy9cbi8vIFx0XHR1dkFycmF5LnB1c2hfZWxlbWVudCggZ2VvbWV0cnkuZmFjZVZlcnRleFV2c1sgMCBdWyBpIF1bIDAgXSApO1xuLy8gXHRcdHV2QXJyYXkucHVzaF9lbGVtZW50KCBnZW9tZXRyeS5mYWNlVmVydGV4VXZzWyAwIF1bIGkgXVsgMSBdICk7XG4vLyBcdFx0dXZBcnJheS5wdXNoX2VsZW1lbnQoIGdlb21ldHJ5LmZhY2VWZXJ0ZXhVdnNbIDAgXVsgaSBdWyAyIF0gKTtcbi8vXG4vLyBcdH1cbi8vXG4vLyBcdGluZGV4QXJyYXkudHJpbV9zaXplKCk7XG4vLyBcdHZlcnRBcnJheS50cmltX3NpemUoKTtcbi8vIFx0dXZBcnJheS50cmltX3NpemUoKTtcbi8vXG4vLyBcdEJHZW9tLnNldEluZGV4KCBuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKCBpbmRleEFycmF5LmJ1ZmZlciwgMyApICk7XG4vLyBcdEJHZW9tLmFkZEF0dHJpYnV0ZSggJ3Bvc2l0aW9uJywgbmV3IFRIUkVFLkJ1ZmZlckF0dHJpYnV0ZSggdmVydEFycmF5LmJ1ZmZlciwgMyApICk7XG4vLyBcdEJHZW9tLmFkZEF0dHJpYnV0ZSggJ3V2JywgbmV3IFRIUkVFLkJ1ZmZlckF0dHJpYnV0ZSggdXZBcnJheS5idWZmZXIsIDIgKSApO1xuLy9cbi8vIFx0cmV0dXJuIEJHZW9tO1xuLy9cbi8vIH1cblxuZnVuY3Rpb24gY29tcHV0ZV92ZXJ0ZXhfbm9ybWFscyggZ2VvbWV0cnkgKSB7XG5cblx0dmFyIEFCQyA9IFsgJ2EnLCAnYicsICdjJyBdO1xuXHR2YXIgWFlaID0gWyAneCcsICd5JywgJ3onIF07XG5cdHZhciBYWSA9IFsgJ3gnLCAneScgXTtcblxuXHR2YXIgb2xkVmVydGljZXMgPSBuZXcgVHlwZWRBcnJheUhlbHBlciggMCwgNSwgVEhSRUUuVmVjdG9yMywgRmxvYXQzMkFycmF5LCAzLCBYWVogKTtcblx0dmFyIG9sZEZhY2VzID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoIDAsIDMsIFRIUkVFLkZhY2UzLCBVaW50MzJBcnJheSwgMywgQUJDICk7XG5cdG9sZFZlcnRpY2VzLmZyb21fZXhpc3RpbmcoIGdlb21ldHJ5LmdldEF0dHJpYnV0ZSggJ3Bvc2l0aW9uJyApLmFycmF5ICk7XG5cdHZhciBuZXdOb3JtYWxzID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoIG9sZFZlcnRpY2VzLmxlbmd0aCAqIDMsIDQsIFRIUkVFLlZlY3RvcjMsIEZsb2F0MzJBcnJheSwgMywgWFlaICk7XG5cdHZhciBuZXdOb3JtYWxGYWNlcyA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCBvbGRWZXJ0aWNlcy5sZW5ndGgsIDEsIGZ1bmN0aW9uICgpIHsgdGhpcy54ID0gMDsgfSwgRmxvYXQzMkFycmF5LCAxLCBbICd4JyBdICk7XG5cblx0bmV3Tm9ybWFscy5sZW5ndGggPSBvbGRWZXJ0aWNlcy5sZW5ndGg7XG5cdG9sZEZhY2VzLmZyb21fZXhpc3RpbmcoIGdlb21ldHJ5LmluZGV4LmFycmF5ICk7XG5cdHZhciBhLCBiLCBjO1xuXHR2YXIgbXlfd2VpZ2h0O1xuXHR2YXIgZnVsbF93ZWlnaHRzID0gWyAwLjAsIDAuMCwgMC4wIF07XG5cblx0Zm9yICggdmFyIGkgPSAwLCBpbCA9IG9sZEZhY2VzLmxlbmd0aDsgaSA8IGlsOyBpKysgKSB7XG5cblx0XHRvbGRGYWNlcy5pbmRleF90b19yZWdpc3RlciggaSwgMCApO1xuXG5cdFx0b2xkVmVydGljZXMuaW5kZXhfdG9fcmVnaXN0ZXIoIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYSwgMCApO1xuXHRcdG9sZFZlcnRpY2VzLmluZGV4X3RvX3JlZ2lzdGVyKCBvbGRGYWNlcy5yZWdpc3RlclsgMCBdLmIsIDEgKTtcblx0XHRvbGRWZXJ0aWNlcy5pbmRleF90b19yZWdpc3Rlciggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5jLCAyICk7XG5cblx0XHRuZXdOb3JtYWxzLnJlZ2lzdGVyWyAwIF0uc3ViVmVjdG9ycyggb2xkVmVydGljZXMucmVnaXN0ZXJbIDEgXSwgb2xkVmVydGljZXMucmVnaXN0ZXJbIDAgXSApO1xuXHRcdG5ld05vcm1hbHMucmVnaXN0ZXJbIDEgXS5zdWJWZWN0b3JzKCBvbGRWZXJ0aWNlcy5yZWdpc3RlclsgMiBdLCBvbGRWZXJ0aWNlcy5yZWdpc3RlclsgMSBdICk7XG5cdFx0bmV3Tm9ybWFscy5yZWdpc3RlclsgMCBdLmNyb3NzKCBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAxIF0gKTtcblx0XHRteV93ZWlnaHQgPSBNYXRoLmFicyggbmV3Tm9ybWFscy5yZWdpc3RlclsgMCBdLmxlbmd0aCgpICk7XG5cblx0XHRuZXdOb3JtYWxGYWNlcy5idWZmZXJbIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYSBdICs9IG15X3dlaWdodDtcblx0XHRuZXdOb3JtYWxGYWNlcy5idWZmZXJbIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYiBdICs9IG15X3dlaWdodDtcblx0XHRuZXdOb3JtYWxGYWNlcy5idWZmZXJbIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYyBdICs9IG15X3dlaWdodDtcblxuXHR9XG5cblx0dmFyIHRfbGVuO1xuXG5cdGZvciAoIHZhciBpID0gMCwgaWwgPSBvbGRGYWNlcy5sZW5ndGg7IGkgPCBpbDsgaSsrICkge1xuXG5cdFx0b2xkRmFjZXMuaW5kZXhfdG9fcmVnaXN0ZXIoIGksIDAgKTtcblx0XHRvbGRWZXJ0aWNlcy5pbmRleF90b19yZWdpc3Rlciggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5hLCAwICk7XG5cdFx0b2xkVmVydGljZXMuaW5kZXhfdG9fcmVnaXN0ZXIoIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYiwgMSApO1xuXHRcdG9sZFZlcnRpY2VzLmluZGV4X3RvX3JlZ2lzdGVyKCBvbGRGYWNlcy5yZWdpc3RlclsgMCBdLmMsIDIgKTtcblxuXHRcdG5ld05vcm1hbHMucmVnaXN0ZXJbIDAgXS5zdWJWZWN0b3JzKCBvbGRWZXJ0aWNlcy5yZWdpc3RlclsgMSBdLCBvbGRWZXJ0aWNlcy5yZWdpc3RlclsgMCBdICk7XG5cdFx0bmV3Tm9ybWFscy5yZWdpc3RlclsgMSBdLnN1YlZlY3RvcnMoIG9sZFZlcnRpY2VzLnJlZ2lzdGVyWyAyIF0sIG9sZFZlcnRpY2VzLnJlZ2lzdGVyWyAwIF0gKTtcblxuXHRcdG5ld05vcm1hbHMucmVnaXN0ZXJbIDMgXS5zZXQoIDAsIDAsIDAgKTtcblx0XHRuZXdOb3JtYWxzLnJlZ2lzdGVyWyAzIF0ueCA9ICggbmV3Tm9ybWFscy5yZWdpc3RlclsgMCBdLnkgKiBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAxIF0ueiApIC0gKCBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAwIF0ueiAqIG5ld05vcm1hbHMucmVnaXN0ZXJbIDEgXS55ICk7XG5cdFx0bmV3Tm9ybWFscy5yZWdpc3RlclsgMyBdLnkgPSAoIG5ld05vcm1hbHMucmVnaXN0ZXJbIDAgXS56ICogbmV3Tm9ybWFscy5yZWdpc3RlclsgMSBdLnggKSAtICggbmV3Tm9ybWFscy5yZWdpc3RlclsgMCBdLnggKiBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAxIF0ueiApO1xuXHRcdG5ld05vcm1hbHMucmVnaXN0ZXJbIDMgXS56ID0gKCBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAwIF0ueCAqIG5ld05vcm1hbHMucmVnaXN0ZXJbIDEgXS55ICkgLSAoIG5ld05vcm1hbHMucmVnaXN0ZXJbIDAgXS55ICogbmV3Tm9ybWFscy5yZWdpc3RlclsgMSBdLnggKTtcblxuXHRcdG5ld05vcm1hbHMucmVnaXN0ZXJbIDAgXS5jcm9zcyggbmV3Tm9ybWFscy5yZWdpc3RlclsgMSBdICk7XG5cblx0XHRteV93ZWlnaHQgPSBNYXRoLmFicyggbmV3Tm9ybWFscy5yZWdpc3RlclsgMCBdLmxlbmd0aCgpICk7XG5cblx0XHRmdWxsX3dlaWdodHNbIDAgXSA9ICggbXlfd2VpZ2h0IC8gbmV3Tm9ybWFsRmFjZXMuYnVmZmVyWyBvbGRGYWNlcy5yZWdpc3RlclsgMCBdLmEgXSApO1xuXHRcdGZ1bGxfd2VpZ2h0c1sgMSBdID0gKCBteV93ZWlnaHQgLyBuZXdOb3JtYWxGYWNlcy5idWZmZXJbIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYiBdICk7XG5cdFx0ZnVsbF93ZWlnaHRzWyAyIF0gPSAoIG15X3dlaWdodCAvIG5ld05vcm1hbEZhY2VzLmJ1ZmZlclsgb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5jIF0gKTtcblxuXHRcdG5ld05vcm1hbHMuYnVmZmVyWyAoIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYSAqIDMgKSArIDAgXSArPSBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAzIF0ueCAqIGZ1bGxfd2VpZ2h0c1sgMCBdO1xuXHRcdG5ld05vcm1hbHMuYnVmZmVyWyAoIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYSAqIDMgKSArIDEgXSArPSBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAzIF0ueSAqIGZ1bGxfd2VpZ2h0c1sgMCBdO1xuXHRcdG5ld05vcm1hbHMuYnVmZmVyWyAoIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYSAqIDMgKSArIDIgXSArPSBuZXdOb3JtYWxzLnJlZ2lzdGVyWyAzIF0ueiAqIGZ1bGxfd2VpZ2h0c1sgMCBdO1xuXG5cdFx0bmV3Tm9ybWFscy5idWZmZXJbICggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5iICogMyApICsgMCBdICs9IG5ld05vcm1hbHMucmVnaXN0ZXJbIDMgXS54ICogZnVsbF93ZWlnaHRzWyAxIF07XG5cdFx0bmV3Tm9ybWFscy5idWZmZXJbICggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5iICogMyApICsgMSBdICs9IG5ld05vcm1hbHMucmVnaXN0ZXJbIDMgXS55ICogZnVsbF93ZWlnaHRzWyAxIF07XG5cdFx0bmV3Tm9ybWFscy5idWZmZXJbICggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5iICogMyApICsgMiBdICs9IG5ld05vcm1hbHMucmVnaXN0ZXJbIDMgXS56ICogZnVsbF93ZWlnaHRzWyAxIF07XG5cblx0XHRuZXdOb3JtYWxzLmJ1ZmZlclsgKCBvbGRGYWNlcy5yZWdpc3RlclsgMCBdLmMgKiAzICkgKyAwIF0gKz0gbmV3Tm9ybWFscy5yZWdpc3RlclsgMyBdLnggKiBmdWxsX3dlaWdodHNbIDIgXTtcblx0XHRuZXdOb3JtYWxzLmJ1ZmZlclsgKCBvbGRGYWNlcy5yZWdpc3RlclsgMCBdLmMgKiAzICkgKyAxIF0gKz0gbmV3Tm9ybWFscy5yZWdpc3RlclsgMyBdLnkgKiBmdWxsX3dlaWdodHNbIDIgXTtcblx0XHRuZXdOb3JtYWxzLmJ1ZmZlclsgKCBvbGRGYWNlcy5yZWdpc3RlclsgMCBdLmMgKiAzICkgKyAyIF0gKz0gbmV3Tm9ybWFscy5yZWdpc3RlclsgMyBdLnogKiBmdWxsX3dlaWdodHNbIDIgXTtcblxuXHR9XG5cblx0bmV3Tm9ybWFscy50cmltX3NpemUoKTtcblx0Z2VvbWV0cnkuYWRkQXR0cmlidXRlKCAnbm9ybWFsJywgbmV3IFRIUkVFLkJ1ZmZlckF0dHJpYnV0ZSggbmV3Tm9ybWFscy5idWZmZXIsIDMgKSApO1xuXG59XG5cbmZ1bmN0aW9uIHVuSW5kZXhJbmRleGVkR2VvbWV0cnkoIGdlb21ldHJ5ICkge1xuXG5cdHZhciBBQkMgPSBbICdhJywgJ2InLCAnYycgXTtcblx0dmFyIFhZWiA9IFsgJ3gnLCAneScsICd6JyBdO1xuXHR2YXIgWFkgPSBbICd4JywgJ3knIF07XG5cblx0dmFyIG9sZFZlcnRpY2VzID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoIDAsIDMsIFRIUkVFLlZlY3RvcjMsIEZsb2F0MzJBcnJheSwgMywgWFlaICk7XG5cdHZhciBvbGRGYWNlcyA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCAwLCAzLCBUSFJFRS5GYWNlMywgVWludDMyQXJyYXksIDMsIEFCQyApO1xuXHR2YXIgb2xkVXZzID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoIDAsIDMsIFRIUkVFLlZlY3RvcjIsIEZsb2F0MzJBcnJheSwgMiwgWFkgKTtcblx0dmFyIG9sZE5vcm1hbHMgPSBuZXcgVHlwZWRBcnJheUhlbHBlciggMCwgMywgVEhSRUUuVmVjdG9yMywgRmxvYXQzMkFycmF5LCAzLCBYWVogKTtcblxuXHRvbGRWZXJ0aWNlcy5mcm9tX2V4aXN0aW5nKCBnZW9tZXRyeS5nZXRBdHRyaWJ1dGUoICdwb3NpdGlvbicgKS5hcnJheSApO1xuXHRvbGRGYWNlcy5mcm9tX2V4aXN0aW5nKCBnZW9tZXRyeS5pbmRleC5hcnJheSApO1xuXHRvbGRVdnMuZnJvbV9leGlzdGluZyggZ2VvbWV0cnkuZ2V0QXR0cmlidXRlKCAndXYnICkuYXJyYXkgKTtcblxuXHRjb21wdXRlX3ZlcnRleF9ub3JtYWxzKCBnZW9tZXRyeSApO1xuXHRvbGROb3JtYWxzLmZyb21fZXhpc3RpbmcoIGdlb21ldHJ5LmdldEF0dHJpYnV0ZSggJ25vcm1hbCcgKS5hcnJheSApO1xuXG5cdHZhciBuZXdWZXJ0aWNlcyA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCBvbGRGYWNlcy5sZW5ndGggKiAzLCAzLCBUSFJFRS5WZWN0b3IzLCBGbG9hdDMyQXJyYXksIDMsIFhZWiApO1xuXHR2YXIgbmV3Tm9ybWFscyA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCBvbGRGYWNlcy5sZW5ndGggKiAzLCAzLCBUSFJFRS5WZWN0b3IzLCBGbG9hdDMyQXJyYXksIDMsIFhZWiApO1xuXHR2YXIgbmV3VXZzID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoIG9sZEZhY2VzLmxlbmd0aCAqIDMsIDMsIFRIUkVFLlZlY3RvcjIsIEZsb2F0MzJBcnJheSwgMiwgWFkgKTtcblx0dmFyIHYsIHc7XG5cblx0Zm9yICggdmFyIGkgPSAwLCBpbCA9IG9sZEZhY2VzLmxlbmd0aDsgaSA8IGlsOyBpKysgKSB7XG5cblx0XHRvbGRGYWNlcy5pbmRleF90b19yZWdpc3RlciggaSwgMCApO1xuXG5cdFx0b2xkVmVydGljZXMuaW5kZXhfdG9fcmVnaXN0ZXIoIG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF0uYSwgMCApO1xuXHRcdG9sZFZlcnRpY2VzLmluZGV4X3RvX3JlZ2lzdGVyKCBvbGRGYWNlcy5yZWdpc3RlclsgMCBdLmIsIDEgKTtcblx0XHRvbGRWZXJ0aWNlcy5pbmRleF90b19yZWdpc3Rlciggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5jLCAyICk7XG5cblx0XHRuZXdWZXJ0aWNlcy5wdXNoX2VsZW1lbnQoIG9sZFZlcnRpY2VzLnJlZ2lzdGVyWyAwIF0gKTtcblx0XHRuZXdWZXJ0aWNlcy5wdXNoX2VsZW1lbnQoIG9sZFZlcnRpY2VzLnJlZ2lzdGVyWyAxIF0gKTtcblx0XHRuZXdWZXJ0aWNlcy5wdXNoX2VsZW1lbnQoIG9sZFZlcnRpY2VzLnJlZ2lzdGVyWyAyIF0gKTtcblxuXHRcdFx0aWYgKCBvbGRVdnMubGVuZ3RoICE9PSAwICkge1xuXG5cdFx0XHRcdG9sZFV2cy5pbmRleF90b19yZWdpc3RlciggKCBpICogMyApICsgMCwgMCApO1xuXHRcdFx0XHRvbGRVdnMuaW5kZXhfdG9fcmVnaXN0ZXIoICggaSAqIDMgKSArIDEsIDEgKTtcblx0XHRcdFx0b2xkVXZzLmluZGV4X3RvX3JlZ2lzdGVyKCAoIGkgKiAzICkgKyAyLCAyICk7XG5cblx0XHRcdFx0bmV3VXZzLnB1c2hfZWxlbWVudCggb2xkVXZzLnJlZ2lzdGVyWyAwIF0gKTtcblx0XHRcdFx0bmV3VXZzLnB1c2hfZWxlbWVudCggb2xkVXZzLnJlZ2lzdGVyWyAxIF0gKTtcblx0XHRcdFx0bmV3VXZzLnB1c2hfZWxlbWVudCggb2xkVXZzLnJlZ2lzdGVyWyAyIF0gKTtcblxuXHRcdFx0fVxuXG5cdFx0b2xkTm9ybWFscy5pbmRleF90b19yZWdpc3Rlciggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5hLCAwICk7XG5cdFx0b2xkTm9ybWFscy5pbmRleF90b19yZWdpc3Rlciggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5iLCAxICk7XG5cdFx0b2xkTm9ybWFscy5pbmRleF90b19yZWdpc3Rlciggb2xkRmFjZXMucmVnaXN0ZXJbIDAgXS5jLCAyICk7XG5cblx0XHRuZXdOb3JtYWxzLnB1c2hfZWxlbWVudCggb2xkTm9ybWFscy5yZWdpc3RlclsgMCBdICk7XG5cdFx0bmV3Tm9ybWFscy5wdXNoX2VsZW1lbnQoIG9sZE5vcm1hbHMucmVnaXN0ZXJbIDEgXSApO1xuXHRcdG5ld05vcm1hbHMucHVzaF9lbGVtZW50KCBvbGROb3JtYWxzLnJlZ2lzdGVyWyAyIF0gKTtcblxuXHR9XG5cblx0bmV3VmVydGljZXMudHJpbV9zaXplKCk7XG5cdG5ld1V2cy50cmltX3NpemUoKTtcblx0bmV3Tm9ybWFscy50cmltX3NpemUoKTtcblxuXHRnZW9tZXRyeS5pbmRleCA9IG51bGw7XG5cblx0Z2VvbWV0cnkuYWRkQXR0cmlidXRlKCAncG9zaXRpb24nLCBuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKCBuZXdWZXJ0aWNlcy5idWZmZXIsIDMgKSApO1xuXHRnZW9tZXRyeS5hZGRBdHRyaWJ1dGUoICdub3JtYWwnLCBuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKCBuZXdOb3JtYWxzLmJ1ZmZlciwgMyApICk7XG5cblx0aWYgKCBuZXdVdnMubGVuZ3RoICE9PSAwICkge1xuXG5cdFx0Z2VvbWV0cnkuYWRkQXR0cmlidXRlKCAndXYnLCBuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKCBuZXdVdnMuYnVmZmVyLCAyICkgKTtcblxuXHR9XG5cblx0cmV0dXJuIGdlb21ldHJ5O1xuXG59XG5cblRIUkVFLkJ1ZmZlclN1YmRpdmlzaW9uTW9kaWZpZXIgPSBmdW5jdGlvbiggc3ViZGl2aXNpb25zICkge1xuXG5cdHRoaXMuc3ViZGl2aXNpb25zID0gKCBzdWJkaXZpc2lvbnMgPT09IHVuZGVmaW5lZCApID8gMSA6IHN1YmRpdmlzaW9ucztcblxufTtcblxuVEhSRUUuQnVmZmVyU3ViZGl2aXNpb25Nb2RpZmllci5wcm90b3R5cGUubW9kaWZ5ID0gZnVuY3Rpb24oIGdlb21ldHJ5ICkge1xuXG5cdGlmICggZ2VvbWV0cnkgaW5zdGFuY2VvZiBUSFJFRS5HZW9tZXRyeSApIHtcblxuXHRcdGdlb21ldHJ5Lm1lcmdlVmVydGljZXMoKTtcblxuXHRcdGlmICggdHlwZW9mIGdlb21ldHJ5Lm5vcm1hbHMgPT09ICd1bmRlZmluZWQnICkge1xuXG5cdFx0XHRnZW9tZXRyeS5ub3JtYWxzID0gW107XG5cblx0XHR9XG5cblx0XHRnZW9tZXRyeSA9IGNvbnZlcnRHZW9tZXRyeVRvSW5kZXhlZEJ1ZmZlciggZ2VvbWV0cnkgKTtcblxuXHR9IGVsc2UgaWYgKCAhKCBnZW9tZXRyeSBpbnN0YW5jZW9mIFRIUkVFLkJ1ZmZlckdlb21ldHJ5ICkgKSB7XG5cblx0XHRjb25zb2xlLmVycm9yKCAnVEhSRUUuQnVmZmVyU3ViZGl2aXNpb25Nb2RpZmllcjogR2VvbWV0cnkgaXMgbm90IGFuIGluc3RhbmNlIG9mIFRIUkVFLkJ1ZmZlckdlb21ldHJ5IG9yIFRIUkVFLkdlb21ldHJ5JyApO1xuXG5cdH1cblxuXHR2YXIgcmVwZWF0cyA9IHRoaXMuc3ViZGl2aXNpb25zO1xuXG5cdHdoaWxlICggcmVwZWF0cyAtLSA+IDAgKSB7XG5cblx0XHR0aGlzLnNtb290aCggZ2VvbWV0cnkgKTtcblxuXHR9XG5cblx0cmV0dXJuIHVuSW5kZXhJbmRleGVkR2VvbWV0cnkoIGdlb21ldHJ5ICk7XG5cbn07XG5cbnZhciBlZGdlX3R5cGUgPSBmdW5jdGlvbiAoIGEsIGIgKSB7XG5cblx0dGhpcy5hID0gYTtcblx0dGhpcy5iID0gYjtcblx0dGhpcy5mYWNlcyA9IFtdO1xuXHR0aGlzLm5ld0VkZ2UgPSBudWxsO1xuXG59O1xuXG4oIGZ1bmN0aW9uICgpIHtcblxuXHQvLyBTb21lIGNvbnN0YW50c1xuXHR2YXIgQUJDID0gWyAnYScsICdiJywgJ2MnIF07XG5cdHZhciBYWVogPSBbICd4JywgJ3knLCAneicgXTtcblx0dmFyIFhZID0gWyAneCcsICd5JyBdO1xuXG5cdGZ1bmN0aW9uIGdldEVkZ2UoIGEsIGIsIG1hcCApIHtcblxuXHRcdHZhciBrZXkgPSBNYXRoLm1pbiggYSwgYiApICsgJ18nICsgTWF0aC5tYXgoIGEsIGIgKTtcblx0XHRyZXR1cm4gbWFwWyBrZXkgXTtcblxuXHR9XG5cblxuXHRmdW5jdGlvbiBwcm9jZXNzRWRnZSggYSwgYiwgdmVydGljZXMsIG1hcCwgZmFjZSwgbWV0YVZlcnRpY2VzICkge1xuXG5cdFx0dmFyIHZlcnRleEluZGV4QSA9IE1hdGgubWluKCBhLCBiICk7XG5cdFx0dmFyIHZlcnRleEluZGV4QiA9IE1hdGgubWF4KCBhLCBiICk7XG5cblx0XHR2YXIga2V5ID0gdmVydGV4SW5kZXhBICsgJ18nICsgdmVydGV4SW5kZXhCO1xuXG5cdFx0dmFyIGVkZ2U7XG5cblx0XHRpZiAoIGtleSBpbiBtYXAgKSB7XG5cblx0XHRcdGVkZ2UgPSBtYXBbIGtleSBdO1xuXG5cdFx0fSBlbHNlIHtcblxuXHRcdFx0ZWRnZSA9IG5ldyBlZGdlX3R5cGUoIHZlcnRleEluZGV4QSx2ZXJ0ZXhJbmRleEIgKTtcblx0XHRcdG1hcFtrZXldID0gZWRnZTtcblxuXHRcdH1cblxuXHRcdGVkZ2UuZmFjZXMucHVzaCggZmFjZSApO1xuXG5cdFx0bWV0YVZlcnRpY2VzWyBhIF0uZWRnZXMucHVzaCggZWRnZSApO1xuXHRcdG1ldGFWZXJ0aWNlc1sgYiBdLmVkZ2VzLnB1c2goIGVkZ2UgKTtcblxuXHR9XG5cblx0ZnVuY3Rpb24gZ2VuZXJhdGVMb29rdXBzKCB2ZXJ0aWNlcywgZmFjZXMsIG1ldGFWZXJ0aWNlcywgZWRnZXMgKSB7XG5cblx0XHR2YXIgaSwgaWwsIGZhY2UsIGVkZ2U7XG5cblx0XHRmb3IgKCBpID0gMCwgaWwgPSB2ZXJ0aWNlcy5sZW5ndGg7IGkgPCBpbDsgaSsrICkge1xuXG5cdFx0XHRtZXRhVmVydGljZXNbIGkgXSA9IHsgZWRnZXM6IFtdIH07XG5cblx0XHR9XG5cblx0XHRmb3IgKCBpID0gMCwgaWwgPSBmYWNlcy5sZW5ndGg7IGkgPCBpbDsgaSsrICkge1xuXG5cdFx0XHRmYWNlcy5pbmRleF90b19yZWdpc3RlciggaSwgMCApO1xuXHRcdFx0ZmFjZSA9IGZhY2VzLnJlZ2lzdGVyWyAwIF07IC8vIEZhY2VzIGlzIG5vdyBhIFR5cGVkQXJyYXlIZWxwZXIgY2xhc3MsIG5vdCBhIGZhY2UzLlxuXG5cdFx0XHRwcm9jZXNzRWRnZSggZmFjZS5hLCBmYWNlLmIsIHZlcnRpY2VzLCBlZGdlcywgaSwgbWV0YVZlcnRpY2VzICk7XG5cdFx0XHRwcm9jZXNzRWRnZSggZmFjZS5iLCBmYWNlLmMsIHZlcnRpY2VzLCBlZGdlcywgaSwgbWV0YVZlcnRpY2VzICk7XG5cdFx0XHRwcm9jZXNzRWRnZSggZmFjZS5jLCBmYWNlLmEsIHZlcnRpY2VzLCBlZGdlcywgaSwgbWV0YVZlcnRpY2VzICk7XG5cblx0XHR9XG5cblx0fVxuXG5cdGZ1bmN0aW9uIG5ld0ZhY2UoIG5ld0ZhY2VzLCBmYWNlICkge1xuXG5cdFx0bmV3RmFjZXMucHVzaF9lbGVtZW50KCBmYWNlICk7XG5cblx0fVxuXG5cdGZ1bmN0aW9uIG1pZHBvaW50KCBhLCBiICkge1xuXG5cdFx0cmV0dXJuICggTWF0aC5hYnMoIGIgLSBhICkgLyAyICkgKyBNYXRoLm1pbiggYSwgYiApO1xuXG5cdH1cblxuXHRmdW5jdGlvbiBuZXdVdiggbmV3VXZzLCBhLCBiLCBjICkge1xuXG5cdFx0bmV3VXZzLnB1c2hfZWxlbWVudCggYSApO1xuXHRcdG5ld1V2cy5wdXNoX2VsZW1lbnQoIGIgKTtcblx0XHRuZXdVdnMucHVzaF9lbGVtZW50KCBjICk7XG5cblx0fVxuXG5cdC8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vXG5cblx0Ly8gUGVyZm9ybXMgb25lIGl0ZXJhdGlvbiBvZiBTdWJkaXZpc2lvblxuXG5cdFRIUkVFLkJ1ZmZlclN1YmRpdmlzaW9uTW9kaWZpZXIucHJvdG90eXBlLnNtb290aCA9IGZ1bmN0aW9uICggZ2VvbWV0cnkgKSB7XG5cblx0XHR2YXIgb2xkVmVydGljZXMsIG9sZEZhY2VzLCBvbGRVdnM7XG5cdFx0dmFyIG5ld1ZlcnRpY2VzLCBuZXdGYWNlcywgbmV3VVZzO1xuXG5cdFx0dmFyIG4sIGwsIGksIGlsLCBqLCBrO1xuXHRcdHZhciBtZXRhVmVydGljZXMsIHNvdXJjZUVkZ2VzO1xuXG5cdFx0b2xkVmVydGljZXMgPSBuZXcgVHlwZWRBcnJheUhlbHBlciggMCwgMywgVEhSRUUuVmVjdG9yMywgRmxvYXQzMkFycmF5LCAzLCBYWVogKTtcblx0XHRvbGRGYWNlcyA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCAwLCAzLCBUSFJFRS5GYWNlMywgVWludDMyQXJyYXksIDMsIEFCQyApO1xuXHRcdG9sZFV2cyA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCAwLCAzLCBUSFJFRS5WZWN0b3IyLCBGbG9hdDMyQXJyYXksIDIsIFhZICk7XG5cdFx0b2xkVmVydGljZXMuZnJvbV9leGlzdGluZyggZ2VvbWV0cnkuZ2V0QXR0cmlidXRlKCAncG9zaXRpb24nICkuYXJyYXkgKTtcblx0XHRvbGRGYWNlcy5mcm9tX2V4aXN0aW5nKCBnZW9tZXRyeS5pbmRleC5hcnJheSApO1xuXHRcdG9sZFV2cy5mcm9tX2V4aXN0aW5nKCBnZW9tZXRyeS5nZXRBdHRyaWJ1dGUoICd1dicgKS5hcnJheSApO1xuXG5cdFx0dmFyIGRvVXZzID0gZmFsc2U7XG5cblx0XHRpZiAoIHR5cGVvZiBvbGRVdnMgIT09ICd1bmRlZmluZWQnICYmIG9sZFV2cy5sZW5ndGggIT09IDAgKSB7XG5cblx0XHRcdGRvVXZzID0gdHJ1ZTtcblxuXHRcdH1cblx0XHQvKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqXG5cdFx0KlxuXHRcdCogU3RlcCAwOiBQcmVwcm9jZXNzIEdlb21ldHJ5IHRvIEdlbmVyYXRlIGVkZ2VzIExvb2t1cFxuXHRcdCpcblx0XHQqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqL1xuXG5cdFx0bWV0YVZlcnRpY2VzID0gbmV3IEFycmF5KCBvbGRWZXJ0aWNlcy5sZW5ndGggKTtcblx0XHRzb3VyY2VFZGdlcyA9IHt9OyAvLyBFZGdlID0+IHsgb2xkVmVydGV4MSwgb2xkVmVydGV4MiwgZmFjZXNbXSAgfVxuXG5cdFx0Z2VuZXJhdGVMb29rdXBzKCBvbGRWZXJ0aWNlcywgb2xkRmFjZXMsIG1ldGFWZXJ0aWNlcywgc291cmNlRWRnZXMgKTtcblxuXG5cdFx0LyoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKlxuXHRcdCpcblx0XHQqXHRTdGVwIDEuXG5cdFx0Klx0Rm9yIGVhY2ggZWRnZSwgY3JlYXRlIGEgbmV3IEVkZ2UgVmVydGV4LFxuXHRcdCpcdHRoZW4gcG9zaXRpb24gaXQuXG5cdFx0KlxuXHRcdCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiovXG5cblx0XHRuZXdWZXJ0aWNlcyA9IG5ldyBUeXBlZEFycmF5SGVscGVyKCAoIGdlb21ldHJ5LmdldEF0dHJpYnV0ZSggJ3Bvc2l0aW9uJyApLmFycmF5Lmxlbmd0aCAqIDIgKSAvIDMsIDIsIFRIUkVFLlZlY3RvcjMsIEZsb2F0MzJBcnJheSwgMywgWFlaICk7XG5cdFx0dmFyIG90aGVyLCBjdXJyZW50RWRnZSwgbmV3RWRnZSwgZmFjZTtcblx0XHR2YXIgZWRnZVZlcnRleFdlaWdodCwgYWRqYWNlbnRWZXJ0ZXhXZWlnaHQsIGNvbm5lY3RlZEZhY2VzO1xuXG5cdFx0dmFyIHRtcCA9IG5ld1ZlcnRpY2VzLnJlZ2lzdGVyWyAxIF07XG5cdFx0Zm9yICggaSBpbiBzb3VyY2VFZGdlcyApIHtcblxuXHRcdGN1cnJlbnRFZGdlID0gc291cmNlRWRnZXNbIGkgXTtcblx0XHRuZXdFZGdlID0gbmV3VmVydGljZXMucmVnaXN0ZXJbIDAgXTtcblxuXHRcdGVkZ2VWZXJ0ZXhXZWlnaHQgPSAzIC8gODtcblx0XHRhZGphY2VudFZlcnRleFdlaWdodCA9IDEgLyA4O1xuXG5cdFx0Y29ubmVjdGVkRmFjZXMgPSBjdXJyZW50RWRnZS5mYWNlcy5sZW5ndGg7XG5cblx0XHQvLyBjaGVjayBob3cgbWFueSBsaW5rZWQgZmFjZXMuIDIgc2hvdWxkIGJlIGNvcnJlY3QuXG5cdFx0aWYgKCBjb25uZWN0ZWRGYWNlcyAhPT0gMiApIHtcblxuXHRcdFx0Ly8gaWYgbGVuZ3RoIGlzIG5vdCAyLCBoYW5kbGUgY29uZGl0aW9uXG5cdFx0XHRlZGdlVmVydGV4V2VpZ2h0ID0gMC41O1xuXHRcdFx0YWRqYWNlbnRWZXJ0ZXhXZWlnaHQgPSAwO1xuXG5cdFx0fVxuXG5cdFx0b2xkVmVydGljZXMuaW5kZXhfdG9fcmVnaXN0ZXIoIGN1cnJlbnRFZGdlLmEsIDAgKTtcblx0XHRvbGRWZXJ0aWNlcy5pbmRleF90b19yZWdpc3RlciggY3VycmVudEVkZ2UuYiwgMSApO1xuXHRcdG5ld0VkZ2UuYWRkVmVjdG9ycyggb2xkVmVydGljZXMucmVnaXN0ZXJbIDAgXSwgb2xkVmVydGljZXMucmVnaXN0ZXJbIDEgXSApLm11bHRpcGx5U2NhbGFyKCBlZGdlVmVydGV4V2VpZ2h0ICk7XG5cblx0XHR0bXAuc2V0KCAwLCAwLCAwICk7XG5cblx0XHRmb3IgKCBqID0gMDsgaiA8IGNvbm5lY3RlZEZhY2VzOyBqKysgKSB7XG5cblx0XHRcdG9sZEZhY2VzLmluZGV4X3RvX3JlZ2lzdGVyKCBjdXJyZW50RWRnZS5mYWNlc1sgaiBdLCAwICk7XG5cdFx0XHRmYWNlID0gb2xkRmFjZXMucmVnaXN0ZXJbIDAgXTtcblxuXHRcdFx0Zm9yICggayA9IDA7IGsgPCAzOyBrKysgKSB7XG5cblx0XHRcdFx0b2xkVmVydGljZXMuaW5kZXhfdG9fcmVnaXN0ZXIoIGZhY2VbIEFCQ1sgayBdIF0sIDIgKTtcblx0XHRcdFx0b3RoZXIgPSBvbGRWZXJ0aWNlcy5yZWdpc3RlclsgMiBdO1xuXG5cdFx0XHRcdGlmICggZmFjZVsgQUJDWyBrIF0gXSAhPT0gY3VycmVudEVkZ2UuYSAmJiBmYWNlWyBBQkNbIGsgXSBdICE9PSBjdXJyZW50RWRnZS5iKSB7XG5cblx0XHRcdFx0XHRicmVhaztcblxuXHRcdFx0XHR9XG5cblx0XHR9XG5cblx0XHR0bXAuYWRkKCBvdGhlciApO1xuXG5cdFx0fVxuXG5cdFx0dG1wLm11bHRpcGx5U2NhbGFyKCBhZGphY2VudFZlcnRleFdlaWdodCApO1xuXHRcdG5ld0VkZ2UuYWRkKCB0bXAgKTtcblxuXHRcdGN1cnJlbnRFZGdlLm5ld0VkZ2UgPSBuZXdWZXJ0aWNlcy5sZW5ndGg7XG5cdFx0bmV3VmVydGljZXMucHVzaF9lbGVtZW50KCBuZXdFZGdlICk7XG5cblx0XHR9XG5cblx0XHR2YXIgZWRnZUxlbmd0aCA9IG5ld1ZlcnRpY2VzLmxlbmd0aDtcblx0XHQvKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqXG5cdFx0KlxuXHRcdCpcdFN0ZXAgMi5cblx0XHQqXHRSZXBvc2l0aW9uIGVhY2ggc291cmNlIHZlcnRpY2VzLlxuXHRcdCpcblx0XHQqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqL1xuXG5cdFx0dmFyIGJldGEsIHNvdXJjZVZlcnRleFdlaWdodCwgY29ubmVjdGluZ1ZlcnRleFdlaWdodDtcblx0XHR2YXIgY29ubmVjdGluZ0VkZ2UsIGNvbm5lY3RpbmdFZGdlcywgb2xkVmVydGV4LCBuZXdTb3VyY2VWZXJ0ZXg7XG5cblx0XHRmb3IgKCBpID0gMCwgaWwgPSBvbGRWZXJ0aWNlcy5sZW5ndGg7IGkgPCBpbDsgaSsrICkge1xuXG5cdFx0XHRvbGRWZXJ0aWNlcy5pbmRleF90b19yZWdpc3RlciggaSwgMCwgWFlaICk7XG5cdFx0XHRvbGRWZXJ0ZXggPSBvbGRWZXJ0aWNlcy5yZWdpc3RlclsgMCBdO1xuXG5cdFx0XHQvLyBmaW5kIGFsbCBjb25uZWN0aW5nIGVkZ2VzICh1c2luZyBsb29rdXBUYWJsZSlcblx0XHRcdGNvbm5lY3RpbmdFZGdlcyA9IG1ldGFWZXJ0aWNlc1sgaSBdLmVkZ2VzO1xuXHRcdFx0biA9IGNvbm5lY3RpbmdFZGdlcy5sZW5ndGg7XG5cblx0XHRcdGlmICggbiA9PT0gMyApIHtcblxuXHRcdFx0XHRiZXRhID0gMyAvIDE2O1xuXG5cdFx0XHR9IGVsc2UgaWYgKG4gPiAzKSB7XG5cblx0XHRcdFx0YmV0YSA9IDMgLyAoOCAqIG4pOyAvLyBXYXJyZW4ncyBtb2RpZmllZCBmb3JtdWxhXG5cblx0XHRcdH1cblxuXHRcdFx0Ly8gTG9vcCdzIG9yaWdpbmFsIGJldGEgZm9ybXVsYVxuXHRcdFx0Ly8gYmV0YSA9IDEgLyBuICogKCA1LzggLSBNYXRoLnBvdyggMy84ICsgMS80ICogTWF0aC5jb3MoIDIgKiBNYXRoLiBQSSAvIG4gKSwgMikgKTtcblxuXHRcdFx0c291cmNlVmVydGV4V2VpZ2h0ID0gMSAtIG4gKiBiZXRhO1xuXHRcdFx0Y29ubmVjdGluZ1ZlcnRleFdlaWdodCA9IGJldGE7XG5cblx0XHRcdGlmICggbiA8PSAyICkge1xuXG5cdFx0XHRcdC8vIGNyZWFzZSBhbmQgYm91bmRhcnkgcnVsZXNcblxuXHRcdFx0XHRpZiAoIG4gPT09IDIgKSB7XG5cblx0XHRcdFx0XHRzb3VyY2VWZXJ0ZXhXZWlnaHQgPSAzIC8gNDtcblx0XHRcdFx0XHRjb25uZWN0aW5nVmVydGV4V2VpZ2h0ID0gMSAvIDg7XG5cblx0XHRcdFx0fVxuXG5cdFx0XHR9XG5cblx0XHRcdG5ld1NvdXJjZVZlcnRleCA9IG9sZFZlcnRleC5tdWx0aXBseVNjYWxhciggc291cmNlVmVydGV4V2VpZ2h0ICk7XG5cblx0XHRcdHRtcC5zZXQoIDAsIDAsIDAgKTtcblxuXHRcdFx0Zm9yICggaiA9IDA7IGogPCBuOyBqKysgKSB7XG5cblx0XHRcdFx0Y29ubmVjdGluZ0VkZ2UgPSBjb25uZWN0aW5nRWRnZXNbIGogXTtcblx0XHRcdFx0b3RoZXIgPSBjb25uZWN0aW5nRWRnZS5hICE9PSBpID8gY29ubmVjdGluZ0VkZ2UuYSA6IGNvbm5lY3RpbmdFZGdlLmI7XG5cdFx0XHRcdG9sZFZlcnRpY2VzLmluZGV4X3RvX3JlZ2lzdGVyKCBvdGhlciwgMSwgWFlaICk7XG5cdFx0XHRcdHRtcC5hZGQoIG9sZFZlcnRpY2VzLnJlZ2lzdGVyWyAxIF0gKTtcblxuXHRcdFx0fVxuXG5cdFx0XHR0bXAubXVsdGlwbHlTY2FsYXIoIGNvbm5lY3RpbmdWZXJ0ZXhXZWlnaHQgKTtcblx0XHRcdG5ld1NvdXJjZVZlcnRleC5hZGQoIHRtcCApO1xuXG5cdFx0XHRuZXdWZXJ0aWNlcy5wdXNoX2VsZW1lbnQoIG5ld1NvdXJjZVZlcnRleCxYWVogKTtcblxuXHRcdH1cblxuXG5cdFx0LyoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKlxuXHRcdCpcblx0XHQqXHRTdGVwIDMuXG5cdFx0Klx0R2VuZXJhdGUgZmFjZXMgYmV0d2VlbiBzb3VyY2UgdmVydGljZXMgYW5kIGVkZ2UgdmVydGljZXMuXG5cdFx0KlxuXHRcdCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiovXG5cblxuXHRcdHZhciBlZGdlMSwgZWRnZTIsIGVkZ2UzO1xuXHRcdG5ld0ZhY2VzID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoICggZ2VvbWV0cnkuaW5kZXguYXJyYXkubGVuZ3RoICogNCApIC8gMywgMSwgVEhSRUUuRmFjZTMsIEZsb2F0MzJBcnJheSwgMywgQUJDICk7XG5cdFx0bmV3VVZzID0gbmV3IFR5cGVkQXJyYXlIZWxwZXIoICggZ2VvbWV0cnkuZ2V0QXR0cmlidXRlKCAndXYnICkuYXJyYXkubGVuZ3RoICogNCApIC8gMiwgMywgVEhSRUUuVmVjdG9yMiwgRmxvYXQzMkFycmF5LCAyLCBYWSApO1xuXHRcdHZhciB4MyA9IG5ld1VWcy5yZWdpc3RlclsgMCBdO1xuXHRcdHZhciB4NCA9IG5ld1VWcy5yZWdpc3RlclsgMSBdO1xuXHRcdHZhciB4NSA9IG5ld1VWcy5yZWdpc3RlclsgMiBdO1xuXHRcdHZhciB0RmFjZSA9IG5ld0ZhY2VzLnJlZ2lzdGVyWyAwIF07XG5cblx0XHRmb3IgKCBpID0gMCwgaWwgPSBvbGRGYWNlcy5sZW5ndGg7IGkgPCBpbDsgaSsrICkge1xuXG5cdFx0XHRvbGRGYWNlcy5pbmRleF90b19yZWdpc3RlciggaSwgMCApO1xuXHRcdFx0ZmFjZSA9IG9sZEZhY2VzLnJlZ2lzdGVyWyAwIF07XG5cblx0XHRcdC8vIGZpbmQgdGhlIDMgbmV3IGVkZ2VzIHZlcnRleCBvZiBlYWNoIG9sZCBmYWNlXG5cdFx0XHQvLyBUaGUgbmV3IHNvdXJjZSB2ZXJ0cyBhcmUgYWRkZWQgYWZ0ZXIgdGhlIG5ldyBlZGdlIHZlcnRzIG5vdy4uXG5cblx0XHRcdGVkZ2UxID0gZ2V0RWRnZSggZmFjZS5hLCBmYWNlLmIsIHNvdXJjZUVkZ2VzICkubmV3RWRnZTtcblx0XHRcdGVkZ2UyID0gZ2V0RWRnZSggZmFjZS5iLCBmYWNlLmMsIHNvdXJjZUVkZ2VzICkubmV3RWRnZTtcblx0XHRcdGVkZ2UzID0gZ2V0RWRnZSggZmFjZS5jLCBmYWNlLmEsIHNvdXJjZUVkZ2VzICkubmV3RWRnZTtcblxuXHRcdFx0Ly8gY3JlYXRlIDQgZmFjZXMuXG5cdFx0XHR0RmFjZS5zZXQoIGVkZ2UxLCBlZGdlMiwgZWRnZTMgKTtcblx0XHRcdG5ld0ZhY2UoIG5ld0ZhY2VzLCB0RmFjZSApO1xuXHRcdFx0dEZhY2Uuc2V0KCBmYWNlLmEgKyBlZGdlTGVuZ3RoLCBlZGdlMSwgZWRnZTMgKTtcblx0XHRcdG5ld0ZhY2UoIG5ld0ZhY2VzLCB0RmFjZSApO1xuXHRcdFx0dEZhY2Uuc2V0KCBmYWNlLmIgKyBlZGdlTGVuZ3RoLCBlZGdlMiwgZWRnZTEgKTtcblx0XHRcdG5ld0ZhY2UoIG5ld0ZhY2VzLCB0RmFjZSApO1xuXHRcdFx0dEZhY2Uuc2V0KCBmYWNlLmMgKyBlZGdlTGVuZ3RoLCBlZGdlMywgZWRnZTIgKTtcblx0XHRcdG5ld0ZhY2UoIG5ld0ZhY2VzLCB0RmFjZSApO1xuXG5cblx0XHRcdC8qXG5cdFx0XHRcdDBfX19fX19fX0NfX19fX19fMlxuXHRcdFx0XHQgXFwgICAgICAvXFwgICAgICAvXG5cdFx0XHRcdCAgXFwgRjIgLyAgXFwgRjQgL1xuXHRcdFx0XHQgICBcXCAgLyBGMSBcXCAgL1xuXHRcdFx0XHQgICAgXFwvX19fX19fXFwvXG5cdFx0XHRcdCAgIEEgXFwgICAgICAvIEJcblx0XHRcdFx0ICAgICAgXFwgRjMgL1xuXHRcdFx0XHQgICAgICAgXFwgIC9cblx0XHRcdFx0ICAgICAgICBcXC9cblx0XHRcdFx0ICAgICAgICAgMVxuXG5cdFx0XHRcdERyYXcgb3JkZXJzOlxuXHRcdFx0XHRGMTogQUJDIHgzLHg0LHg1XG5cdFx0XHRcdEYyOiAwQUMgeDAseDMseDVcblx0XHRcdFx0RjM6IDFCQSB4MSx4NCx4M1xuXHRcdFx0XHRGNDogMkNCIHgyLHg1LHg0XG5cblx0XHRcdFx0MDogeDBcblx0XHRcdFx0MTogeDFcblx0XHRcdFx0MjogeDJcblx0XHRcdFx0QTogeDNcblx0XHRcdFx0QjogeDRcblx0XHRcdFx0QzogeDVcblx0XHRcdCovXG5cblx0XHRcdGlmICggZG9VdnMgPT09IHRydWUgKSB7XG5cblx0XHRcdFx0b2xkVXZzLmluZGV4X3RvX3JlZ2lzdGVyKCAoIGkgKiAzICkgKyAwLCAwICk7XG5cdFx0XHRcdG9sZFV2cy5pbmRleF90b19yZWdpc3RlciggKCBpICogMyApICsgMSwgMSApO1xuXHRcdFx0XHRvbGRVdnMuaW5kZXhfdG9fcmVnaXN0ZXIoICggaSAqIDMgKSArIDIsIDIgKTtcblxuXHRcdFx0XHR2YXIgeDAgPSBvbGRVdnMucmVnaXN0ZXJbIDAgXTsgLy8gdXZbMF07XG5cdFx0XHRcdHZhciB4MSA9IG9sZFV2cy5yZWdpc3RlclsgMSBdOyAvLyB1dlsxXTtcblx0XHRcdFx0dmFyIHgyID0gb2xkVXZzLnJlZ2lzdGVyWyAyIF07IC8vIHV2WzJdO1xuXG5cdFx0XHRcdHgzLnNldCggbWlkcG9pbnQoIHgwLngsIHgxLnggKSwgbWlkcG9pbnQoIHgwLnksIHgxLnkgKSApO1xuXHRcdFx0XHR4NC5zZXQoIG1pZHBvaW50KCB4MS54LCB4Mi54ICksIG1pZHBvaW50KCB4MS55LCB4Mi55ICkgKTtcblx0XHRcdFx0eDUuc2V0KCBtaWRwb2ludCggeDAueCwgeDIueCApLCBtaWRwb2ludCggeDAueSwgeDIueSApICk7XG5cblx0XHRcdFx0bmV3VXYoIG5ld1VWcywgeDMsIHg0LCB4NSApO1xuXHRcdFx0XHRuZXdVdiggbmV3VVZzLCB4MCwgeDMsIHg1ICk7XG5cblx0XHRcdFx0bmV3VXYoIG5ld1VWcywgeDEsIHg0LCB4MyApO1xuXHRcdFx0XHRuZXdVdiggbmV3VVZzLCB4MiwgeDUsIHg0ICk7XG5cblx0XHRcdH1cblxuXHRcdH1cblxuXHRcdC8vIE92ZXJ3cml0ZSBvbGQgYXJyYXlzXG5cblx0XHRuZXdGYWNlcy50cmltX3NpemUoKTtcblx0XHRuZXdWZXJ0aWNlcy50cmltX3NpemUoKTtcblx0XHRuZXdVVnMudHJpbV9zaXplKCk7XG5cblx0XHRnZW9tZXRyeS5zZXRJbmRleCggbmV3IFRIUkVFLkJ1ZmZlckF0dHJpYnV0ZSggbmV3RmFjZXMuYnVmZmVyICwzICkgKTtcblx0XHRnZW9tZXRyeS5hZGRBdHRyaWJ1dGUoICdwb3NpdGlvbicsIG5ldyBUSFJFRS5CdWZmZXJBdHRyaWJ1dGUoIG5ld1ZlcnRpY2VzLmJ1ZmZlciwgMyApICk7XG5cdFx0Z2VvbWV0cnkuYWRkQXR0cmlidXRlKCAndXYnLCBuZXcgVEhSRUUuQnVmZmVyQXR0cmlidXRlKCBuZXdVVnMuYnVmZmVyLCAyICkgKTtcblxuXHR9O1xuXG59ICkgKCk7XG4iXSwibWFwcGluZ3MiOiJBQUFBO0FBQUE7QUFBQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTsiLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///./src/glow.mjs\n");
 
 /***/ })
-/******/ ]);
+
+/******/ });
